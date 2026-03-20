@@ -1,5 +1,5 @@
-/* LoginPage styles moved from inline */
-.login-container {
+/* SignupPage styles moved from inline */
+.signup-container {
   display: flex;
   height: 100vh;
   width: 100vw;
@@ -11,7 +11,7 @@
   left: 0;
   z-index: 9999;
 }
-.login-left {
+.signup-left {
   flex: 1;
   display: flex;
   align-items: center;
@@ -20,7 +20,7 @@
   min-width: 50%;
   box-sizing: border-box;
 }
-.login-card {
+.signup-card {
   background-color: #f0f0ec;
   border-radius: 32px;
   padding: 48px 40px;
@@ -31,14 +31,14 @@
   gap: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
-.login-title {
+.signup-title {
   font-size: 36px;
   font-weight: 800;
   color: #1a2420;
   text-align: center;
   margin-bottom: 8px;
 }
-.login-input {
+.signup-input {
   background-color: #e0e0da;
   border: none;
   border-radius: 50px;
@@ -49,23 +49,36 @@
   width: 100%;
   box-sizing: border-box;
 }
-.login-signup-text {
+.signup-role-select {
+  background-color: #e0e0da;
+  border: none;
+  border-radius: 50px;
+  padding: 16px 24px;
+  font-size: 15px;
+  color: #444;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  appearance: none;
+  cursor: pointer;
+}
+.signup-login-text {
   text-align: center;
   font-size: 13px;
   color: #666;
 }
-.login-link {
+.signup-link {
   color: #c8a84b;
   cursor: pointer;
   text-decoration: none;
   font-weight: 600;
 }
-.login-button-row {
+.signup-button-row {
   display: flex;
   gap: 12px;
   margin-top: 8px;
 }
-.login-cancel-btn {
+.signup-cancel-btn {
   flex: 1;
   padding: 14px;
   border-radius: 50px;
@@ -76,7 +89,7 @@
   font-size: 15px;
   cursor: pointer;
 }
-.login-submit-btn {
+.signup-submit-btn {
   flex: 1;
   padding: 14px;
   border-radius: 50px;
@@ -87,7 +100,7 @@
   font-size: 15px;
   cursor: pointer;
 }
-.login-right {
+.signup-right {
   flex: 1;
   position: relative;
   overflow: hidden;
@@ -96,7 +109,7 @@
   background-size: cover;
   background-position: center;
 }
-.login-overlay {
+.signup-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -104,7 +117,7 @@
   height: 100%;
   background-color: rgba(0, 0, 0, 0.35);
 }
-.login-logo {
+.signup-logo {
   position: absolute;
   top: 32px;
   right: 32px;
@@ -113,10 +126,10 @@
   gap: 12px;
   z-index: 2;
 }
-.login-logo-img {
+.signup-logo-img {
   height: 60px;
 }
-.login-circle {
+.signup-circle {
   position: absolute;
   bottom: -80px;
   left: -80px;
@@ -126,7 +139,7 @@
   background-color: rgba(255, 255, 255, 0.05);
   z-index: 2;
 }
-.login-error-text {
+.signup-error-text {
   color: red;
   text-align: center;
   font-size: 13px;
