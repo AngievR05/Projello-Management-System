@@ -1,16 +1,16 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Projello.Api.Models;
-
+using Projello.Api.Data; 
 namespace Projello.Api.Data
 {
     // They cannot be found until code is added in the Models folder for it.
-    public class AppDbContext : IdentityDbContext<User>
+    public class AppDbContext : IdentityDbContext<User> // Base class for Identity tables + custom User
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) 
-            : base(options) { }
+            : base(options) { } // Injects DB connection from Program.cs
 
-        public DbSet<Project> Projects { get; set; } = null!;
+        public DbSet<Project> Projects { get; set; } = null!; // Defines tables for EF queries
         public DbSet<Milestone> Milestones { get; set; } = null!;
         public DbSet<TaskItem> Tasks { get; set; } = null!;
         public DbSet<Client> Clients { get; set; } = null!;
@@ -19,24 +19,46 @@ namespace Projello.Api.Data
         public DbSet<Reaction> Reactions { get; set; } = null!;
         public DbSet<Attachment> Attachments { get; set; } = null!;
 
+        public DbSet<Company> Companies { get; set; } = null!;
+
+        public DbSet<CompanyInvite> CompanyInvites { get; set; } = null!;
+
+        public DbSet<ProjectUpdate> ProjectUpdates { get; set; } = null!;
+        public DbSet<UpdateReaction> UpdateReactions { get; set; } = null!;
+        public DbSet<UpdateComment> UpdateComments { get; set; } = null!;
 
 
-//Section below is extra rule for the database, This one is so no client can be blacklisted by default, they have to be manually blacklisted by an admin.
-     protected override void OnModelCreating(ModelBuilder builder)
+
+        //Section below is extra rule for the database, This one is so no client can be blacklisted by default, they have to be manually blacklisted by an admin.
+        protected override void OnModelCreating(ModelBuilder builder)
 {
     base.OnModelCreating(builder);
 
-    // No client is blacklisted by default
-    builder.Entity<Client>()
-        .Property(c => c.IsBlacklisted)
-        .HasDefaultValue(false);
+            // No client is blacklisted by default
+            builder.Entity<Client>()
+                .Property(c => c.IsBlacklisted)
+                .HasDefaultValue(false);
 
-    // Correct relationship configuration
-    builder.Entity<Client>()
-        .HasOne(c => c.BlacklistedBy)           // Navigation property (User)
-        .WithMany()                             // Admin can blacklist many clients
-        .HasForeignKey(c => c.BlacklistedById)  // The FK property (string)
-        .OnDelete(DeleteBehavior.SetNull);      // If admin is deleted, keep the client record
-}
+            // Correct relationship configuration
+            builder.Entity<Client>()
+                .HasOne(c => c.BlacklistedBy)           // Navigation property (User)
+                .WithMany()                             // Admin can blacklist many clients
+                .HasForeignKey(c => c.BlacklistedById)  // The FK property (string)
+                .OnDelete(DeleteBehavior.SetNull);      // If admin is deleted, keep the client record
+
+            // Company relationship configuration
+            builder.Entity<User>()
+                .HasOne(u => u.Company)
+                .WithMany()
+                .HasForeignKey(u => u.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Company Invite relationship
+            builder.Entity<CompanyInvite>()
+                .HasOne(i => i.Company)
+                .WithMany()
+                .HasForeignKey(i => i.CompanyID)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
 }
 }

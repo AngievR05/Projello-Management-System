@@ -7,8 +7,24 @@ using Projello.Api.Data;
 using Projello.Api.Models;
 using Projello.Api.Hubs;
 using System.Text;
+using CloudinaryDotNet;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Cloudinary configuration
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("CloudinarySettings"));
+
+builder.Services.AddSingleton(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<CloudinarySettings>>().Value;
+    var account = new Account(
+        settings.CloudName,
+        settings.ApiKey,
+        settings.ApiSecret);
+    return new Cloudinary(account);
+});
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -24,7 +40,7 @@ builder.Services.AddIdentityCore<User>(options => {
 .AddDefaultTokenProviders();
 
 // JWT
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "Your_Super_Secret_Key_At_Least_32_Chars";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "Projello@SuperSecret!Key#2026$Secure%";
 builder.Services.AddAuthentication(options => {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -32,23 +48,45 @@ builder.Services.AddAuthentication(options => {
 .AddJwtBearer(options => {
     options.UseSecurityTokenValidators = true; // Critical fix for IdentityModel 8.x
     options.TokenValidationParameters = new TokenValidationParameters {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidateIssuer = true,// Checks token issuer
+        ValidateAudience = true,// Checks intended recipient
+        ValidateLifetime = true,// Ensures not expired
+        ValidateIssuerSigningKey = true, // Verifies signature
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],// From appsettings for flexibility
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ClockSkew = TimeSpan.Zero
     };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            // SignalR sends token in query string
+            var accessToken = context.Request.Query["access_token"];
+            if (!string.IsNullOrEmpty(accessToken))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
-// CORS
-builder.Services.AddCors(options => {
-    options.AddPolicy("AllowElectron", policy => {
-        policy.WithOrigins("http://localhost:3000")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+// CORS - Allow localhost (dev) + your Render domain + Electron
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowApp", policy =>
+    {
+        policy.SetIsOriginAllowed(origin =>
+            origin.StartsWith("http://localhost") ||
+            origin.StartsWith("https://localhost") ||
+            origin == "https://projello-management-system.onrender.com" ||
+            origin.StartsWith("app://") ||           // Common for Electron
+            origin.StartsWith("file://")              // Sometimes used by Electron
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials();
     });
 });
 
@@ -86,17 +124,45 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// NOTE: The line below registers the custom authorization service that will be used to check if users can join or interact with project call rooms.
+builder.Services.AddSignalR();
+builder.Services.Configure<WebRtcOptions>(
+    builder.Configuration.GetSection(WebRtcOptions.SectionName));
+builder.Services.AddSignalR().AddHubOptions<ProjectCallHub>(options =>
+{
+options.EnableDetailedErrors = true;
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseHttpsRedirection();
 }
 
+app.UseSwagger();
+app.UseSwaggerUI();
+
 app.UseHttpsRedirection();
-app.UseCors("AllowElectron");
+app.UseCors("AllowApp");
 app.UseAuthentication();
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/callhub"))
+    {
+        var isAuth = context.User.Identity?.IsAuthenticated ?? false;
+        var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value 
+                  ?? "No UserIdentifier";
+
+        Console.WriteLine($"[SignalR] Authenticated: {isAuth}");
+        Console.WriteLine($"[SignalR] UserIdentifier: {userId}");
+    }
+    await next();
+});
+
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<ProjectCallHub>("/callhub");
+app.MapHub<TeamNotificationHub>("/teamnotificationHub");
 app.Run();

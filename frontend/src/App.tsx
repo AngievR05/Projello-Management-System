@@ -11,6 +11,9 @@ import HistoryPage from "./pages/history/history";
 import SideNavBar from "./components/SideNavBar";
 import BodyBlock from "./components/BodyBlock";
 import SplashPage from "./pages/splash/SplashPage";
+import RegisterCompanyPage from "./pages/signup/RegisterCompanyPage";
+
+import { useTeamNotifications } from "./features/realtime/hooks/useTeamNotifications"; // Do not remove
 
 function LoginWrapper() {
   const navigate = useNavigate();
@@ -18,6 +21,7 @@ function LoginWrapper() {
     <LoginPage
       key="login"
       onSwitchToSignUp={() => navigate("/signup")}
+      onSwitchToRegisterCompany={() => navigate("/register-company")}   // ← NEW
       onLoginSuccess={() => navigate("/dashboard")}
     />
   );
@@ -25,7 +29,17 @@ function LoginWrapper() {
 
 function SignUpWrapper() {
   const navigate = useNavigate();
-  return <SignUpPage key="signup" onSwitchToLogin={() => navigate("/login")} />;
+  return (
+    <SignUpPage 
+      key="signup" 
+      onSwitchToLogin={() => navigate("/login")} 
+    />
+  );
+}
+
+function RegisterCompanyWrapper() {
+  const navigate = useNavigate();
+  return <RegisterCompanyPage onSwitchToLogin={() => navigate("/login")} />;
 }
 
 // --- NEW WRAPPER FOR 2FA ---
@@ -36,6 +50,7 @@ function Verify2FAWrapper() {
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  useTeamNotifications(); // Keep this here to ensure notifications work across the app
   
   // Added "/verify-2fa" to the array so the sidebar is hidden on this page too
   const hideNav = ["/", "/login", "/signup", "/verify-2fa"].includes(location.pathname);
@@ -63,6 +78,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<SplashPage />} />
           <Route path="/login" element={<LoginWrapper />} />
+          <Route path="/register-company" element={<RegisterCompanyWrapper />} />
           <Route path="/signup" element={<SignUpWrapper />} />
           
           {/* NEW 2FA ROUTE */}
@@ -72,7 +88,7 @@ export default function App() {
           <Route path="/management" element={<ManagementPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/single-view" element={<SingleProjectViewPage />} />
+          <Route path="/single-view/:projectId" element={<SingleProjectViewPage />} />
         </Routes>
       </AppLayout>
     </HashRouter>
