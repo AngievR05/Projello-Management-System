@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { message as antdMessage } from "antd";
 import { createSignalRClient } from "../services/signalrClient";
 
+const hubUrl = "/teamNotificationHub";
+
 type TeamJoinedNotification = {
   projectId: number;
   projectName: string;

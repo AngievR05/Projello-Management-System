@@ -46,6 +46,19 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
+  const [zoomedImageUrl, setZoomedImageUrl] = useState<string | null>(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+
+  const openImageZoom = (url: string) => {
+    setZoomedImageUrl(url);
+    setZoomLevel(1);
+  };
+
+  const closeImageZoom = () => {
+    setZoomedImageUrl(null);
+    setZoomLevel(1);
+  };
+
   const fetchPosts = async () => {
     setLoading(true);
     setError(null);
@@ -197,8 +210,6 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
     };
   }, [imagePreviewUrl]);
 
-  const userId = currentUserId; // from token decode or /me endpoint
-
   if (loading) return <p style={{ padding: 20 }}>Loading discussion...</p>;
   if (error) return <p style={{ padding: 20, color: "red" }}>{error}</p>;
 
@@ -271,6 +282,7 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
         <img
           src={post.imageUrl}
           alt="Post"
+          onClick={() => setZoomedImageUrl(post.imageUrl)}
           style={{ width: "100%", maxHeight: 360, objectFit: "cover", display: "block" }}
         />
       )}
@@ -337,6 +349,36 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
   );
 })}
       </section>
+
+
+      {zoomedImageUrl && (
+        <div
+          onClick={() => setZoomedImageUrl(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.8)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: 20,
+          }}
+        >
+          <img
+            src={zoomedImageUrl}
+            alt="Zoomed post"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: "95vw",
+              maxHeight: "95vh",
+              objectFit: "contain",
+              borderRadius: 12,
+              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.4)",
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
