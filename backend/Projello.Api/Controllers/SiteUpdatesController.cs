@@ -5,6 +5,9 @@ using Projello.Api.Models;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 
+using Projello.Api.DTOs;
+using Microsoft.EntityFrameworkCore;
+
 namespace Projello.Api.Controllers;
 
 [ApiController]
@@ -25,12 +28,74 @@ public class SiteUpdatesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetUpdates(int projectId)
     {
-        var updates = _context.ProjectUpdates
+        var updates = await _context.ProjectUpdates
             .Where(u => u.ProjectId == projectId)
             .OrderByDescending(u => u.CreatedAt)
+            .ToListAsync();
+
+        var updateIds = updates.Select(u => u.Id).ToList();
+
+        var userIds = updates.Select(u => u.UserId)
+            .Concat(await _context.UpdateReactions
+                .Where(r => updateIds.Contains(r.UpdateId))
+                .Select(r => r.UserId)
+                .ToListAsync())
+            .Concat(await _context.UpdateComments
+                .Where(c => updateIds.Contains(c.UpdateId))
+                .Select(c => c.UserId)
+                .ToListAsync())
+            .Distinct()
             .ToList();
 
-        return Ok(updates);
+        var userMap = await _context.Users
+            .Where(u => userIds.Contains(u.Id))
+            .Select(u => new { u.Id, u.FullName })
+            .ToDictionaryAsync(x => x.Id, x => x.FullName);
+
+        var reactions = await _context.UpdateReactions
+            .Where(r => updateIds.Contains(r.UpdateId))
+            .OrderBy(r => r.CreatedAt)
+            .ToListAsync();
+
+        var comments = await _context.UpdateComments
+            .Where(c => updateIds.Contains(c.UpdateId))
+            .OrderBy(c => c.CreatedAt)
+            .ToListAsync();
+
+        var payload = updates.Select(u => new ProjectDiscussionPostDto
+        {
+            Id = u.Id,
+            ProjectId = u.ProjectId,
+            UserId = u.UserId,
+            UserFullName = userMap.TryGetValue(u.UserId, out var updateName) ? updateName : "Unknown user",
+            Caption = u.Caption,
+            ImageUrl = u.ImageUrl,
+            CreatedAt = u.CreatedAt,
+            Reactions = reactions
+                .Where(r => r.UpdateId == u.Id)
+                .Select(r => new ProjectDiscussionReactionDto
+                {
+                    Id = r.Id,
+                    UserId = r.UserId,
+                    UserFullName = userMap.TryGetValue(r.UserId, out var reactionName) ? reactionName : "Unknown user",
+                    Emoji = r.Emoji,
+                    CreatedAt = r.CreatedAt
+                })
+                .ToList(),
+            Comments = comments
+                .Where(c => c.UpdateId == u.Id)
+                .Select(c => new ProjectDiscussionCommentDto
+                {
+                    Id = c.Id,
+                    UserId = c.UserId,
+                    UserFullName = userMap.TryGetValue(c.UserId, out var commentName) ? commentName : "Unknown user",
+                    CommentText = c.CommentText,
+                    CreatedAt = c.CreatedAt
+                })
+                .ToList()
+        }).ToList();
+
+        return Ok(payload);
     }
 
     // POST: Create new update (with image)
@@ -112,4 +177,5 @@ public class SiteUpdatesController : ControllerBase
 
         return Ok(comment);
     }
+
 }
