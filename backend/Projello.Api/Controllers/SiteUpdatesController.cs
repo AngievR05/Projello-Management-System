@@ -137,11 +137,21 @@ public class SiteUpdatesController : ControllerBase
     }
 
     // POST: Add reaction to an update
-    [HttpPost("{updateId}/react")]
+  [HttpPost("{updateId}/react")]
     public async Task<IActionResult> React(int updateId, [FromBody] ReactDto dto)
     {
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (userId == null) return Unauthorized();
+
+        var existing = await _context.UpdateReactions
+            .FirstOrDefaultAsync(r => r.UpdateId == updateId && r.UserId == userId && r.Emoji == dto.Emoji);
+
+        if (existing != null)
+        {
+            _context.UpdateReactions.Remove(existing);
+            await _context.SaveChangesAsync();
+            return Ok(new { removed = true });
+        }
 
         var reaction = new UpdateReaction
         {
@@ -154,7 +164,7 @@ public class SiteUpdatesController : ControllerBase
         _context.UpdateReactions.Add(reaction);
         await _context.SaveChangesAsync();
 
-        return Ok();
+        return Ok(new { removed = false });
     }
 
     // POST: Add comment to an update

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import "./single-project-view.css";
 import { API_BASE_URL } from "../../config";
 
 type DiscussionReaction = {
@@ -15,6 +16,7 @@ type DiscussionComment = {
   userFullName: string;
   commentText: string;
   createdAt: string;
+  replies?: DiscussionComment[]; // For potential nested comments in the future
 };
 
 type DiscussionPost = {
@@ -41,6 +43,8 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [commentDrafts, setCommentDrafts] = useState<Record<number, string>>({});
   const [submittingId, setSubmittingId] = useState<number | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -55,6 +59,7 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
       if (!res.ok) throw new Error("Failed to fetch discussion");
 
       const data: DiscussionPost[] = await res.json();
+      console.log("GET /api/projects/:id/updates →", data.slice(0,5));
       setPosts(data);
     } catch (err: any) {
       setError(err.message || "Failed to load discussion");
@@ -68,6 +73,20 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
       fetchPosts();
     }
   }, [projectId]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const id =
+        payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] ||
+        payload["nameid"] ||
+        payload["sub"] ||
+        payload["id"];
+      setCurrentUserId(id ?? null);
+    } catch { /* ignore */ }
+  }, []);
 
   const handleReact = async (updateId: number, emoji: string) => {
     try {
@@ -93,7 +112,8 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
     }
   };
 
-  const handleCommentSubmit = async (updateId: number) => {
+  const handleCommentSubmit = async (e: React.FormEvent, updateId: number) => {
+    e.preventDefault();
     const commentText = commentDrafts[updateId]?.trim();
     if (!commentText) return;
 
@@ -121,158 +141,202 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
     }
   };
 
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const caption = newPostCaption.trim();
+    const imageFile = imageFileInput;
+
+    if (!caption && !imageFile) return;
+
+    try {
+      setSubmittingId(0);
+      const token = localStorage.getItem("token");
+
+      const formData = new FormData();
+      formData.append("caption", caption);
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
+
+      const res = await fetch(`${API_BASE_URL}/api/projects/${projectId}/updates`, {
+        method: "POST",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Failed to post update");
+
+      setNewPostCaption("");
+      setImageFileInput(null);
+      setImagePreviewUrl(null);
+      await fetchPosts();
+    } catch (err: any) {
+      setError(err.message || "Failed to post update");
+    } finally {
+      setSubmittingId(null);
+    }
+  };
+
+  const [newPostCaption, setNewPostCaption] = useState("");
+  const [imageFileInput, setImageFileInput] = useState<File | null>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setImageFileInput(file);
+    setImagePreviewUrl(file ? URL.createObjectURL(file) : null);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
+
+  const userId = currentUserId; // from token decode or /me endpoint
+
   if (loading) return <p style={{ padding: 20 }}>Loading discussion...</p>;
   if (error) return <p style={{ padding: 20, color: "red" }}>{error}</p>;
 
+ const reactionCounts = posts.reduce<Record<string, number>>((acc, post) => {
+  for (const reaction of post.reactions) {
+    acc[reaction.emoji] = (acc[reaction.emoji] ?? 0) + 1;
+  }
+  return acc;
+}, {});
+
+  const userReacted = (post: DiscussionPost, emoji: string) =>
+    post.reactions.some((reaction) => reaction.emoji === emoji && reaction.userId === currentUserId);
+
   return (
-    <div style={{ padding: 16 }}>
-      <div style={{ marginBottom: 20 }}>
+    <div style={{ padding: 16, maxWidth: 980, margin: "0 auto" }}>
+      <section style={{ marginBottom: 20, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: 16 }}>
         <h2 style={{ margin: 0 }}>Discussion</h2>
         <p style={{ margin: "8px 0 0", color: "#64748b" }}>
-          Posts, reactions, and comments for this project.
+          Share updates, react, and reply in the project thread.
         </p>
+
+        <form onSubmit={handleCreatePost} style={{ marginTop: 14 }}>
+          <textarea
+            value={newPostCaption}
+            onChange={(e) => setNewPostCaption(e.target.value)}
+            placeholder="Write an update..."
+            rows={4}
+            style={{ width: "100%", border: "1px solid #e5e7eb", borderRadius: 12, padding: 12, resize: "vertical" }}
+          />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
+            <label htmlFor="discussion-image" style={{ fontSize: 14 }}>
+              Attach an image
+            </label>
+            <input
+              id="discussion-image"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+            />
+            <button type="submit" className="btn-primary" style={{ minWidth: 120 }}>
+              Post update
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        {posts.map(post => {
+  const reactionCounts = post.reactions.reduce<Record<string, number>>((acc, r) => {
+    acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+    return acc;
+  }, {});
+
+  const userReacted = (emoji: string) => post.reactions.some(r => r.emoji === emoji && r.userId === currentUserId);
+
+  return (
+    <article key={post.id} 
+          style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, overflow: "hidden" }}
+    >
+      {/* Post header: author + timestamp */}
+      <div style={{ padding: 16, borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <div style={{ fontWeight: 700 }}>{post.userFullName || "Unknown user"}</div>
+          <div style={{ fontSize: 12, color: "#64748b" }}>{post.createdAt ? new Date(post.createdAt).toLocaleString() : ""}</div>
+        </div>
       </div>
 
-      {posts.length === 0 ? (
-        <p>No posts yet in this discussion.</p>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          {posts.map((post) => {
-            const reactionCounts = post.reactions.reduce<Record<string, number>>((acc, reaction) => {
-              acc[reaction.emoji] = (acc[reaction.emoji] || 0) + 1;
-              return acc;
-            }, {});
-
-            return (
-              <article
-                key={post.id}
-                style={{
-                  background: "#fff",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: 12,
-                  overflow: "hidden",
-                }}
-              >
-                {post.imageUrl && (
-                  <img
-                    src={post.imageUrl}
-                    alt="Post"
-                    style={{
-                      width: "100%",
-                      maxHeight: 320,
-                      objectFit: "cover",
-                      display: "block",
-                    }}
-                  />
-                )}
-
-                <div style={{ padding: 16 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{post.userFullName}</div>
-                      <div style={{ fontSize: 12, color: "#64748b" }}>
-                        {new Date(post.createdAt).toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-
-                  {post.caption && (
-                    <p style={{ margin: "12px 0", fontSize: 15, lineHeight: 1.5 }}>
-                      {post.caption}
-                    </p>
-                  )}
-
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 8,
-                      padding: "12px 0",
-                      borderTop: "1px solid #f1f5f9",
-                      borderBottom: "1px solid #f1f5f9",
-                      marginBottom: 12,
-                    }}
-                  >
-                    {reactionOptions.map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() => handleReact(post.id, emoji)}
-                        disabled={submittingId === post.id}
-                        style={{
-                          border: "1px solid #e5e7eb",
-                          background: "#f8fafc",
-                          borderRadius: 999,
-                          padding: "6px 10px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {emoji}
-                        {reactionCounts[emoji] ? ` ${reactionCounts[emoji]}` : ""}
-                      </button>
-                    ))}
-                  </div>
-
-                  <section>
-                    <div style={{ fontWeight: 600, marginBottom: 10 }}>
-                      Comments {post.comments.length ? `(${post.comments.length})` : ""}
-                    </div>
-
-                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                      {post.comments.map((comment) => (
-                        <div
-                          key={comment.id}
-                          style={{
-                            background: "#f8fafc",
-                            border: "1px solid #e5e7eb",
-                            borderRadius: 10,
-                            padding: 12,
-                          }}
-                        >
-                          <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                            <strong>{comment.userFullName}</strong>
-                            <span style={{ fontSize: 12, color: "#64748b" }}>
-                              {new Date(comment.createdAt).toLocaleString()}
-                            </span>
-                          </div>
-                          <p style={{ margin: "8px 0 0", lineHeight: 1.5 }}>{comment.commentText}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        handleCommentSubmit(post.id);
-                      }}
-                      style={{ marginTop: 12 }}
-                    >
-                      <input
-                        type="text"
-                        value={commentDrafts[post.id] || ""}
-                        onChange={(e) =>
-                          setCommentDrafts((current) => ({
-                            ...current,
-                            [post.id]: e.target.value,
-                          }))
-                        }
-                        placeholder="Write a comment..."
-                        style={{
-                          width: "100%",
-                          padding: "10px 12px",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: 8,
-                          fontSize: 14,
-                        }}
-                      />
-                    </form>
-                  </section>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+      {/* Image */}
+      {post.imageUrl && (
+        <img
+          src={post.imageUrl}
+          alt="Post"
+          style={{ width: "100%", maxHeight: 360, objectFit: "cover", display: "block" }}
+        />
       )}
+
+      <div style={{ padding: 16 }}>
+        {/* Caption */}
+        {post.caption && (
+          <p style={{ marginTop: 0, marginBottom: 12, lineHeight: 1.6 }}>
+            {post.caption}
+          </p>
+        )}
+
+        {/* Reactions */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+          {reactionOptions.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => handleReact(post.id, emoji)}
+              className={`discussion-reaction-btn ${userReacted(emoji) ? "discussion-reaction-btn-reacted" : ""}`}
+              disabled={submittingId === post.id}
+            >
+              <span style={{ marginRight: 6 }}>{emoji}</span>
+              <span style={{ fontWeight: 600 }}>{reactionCounts[emoji] || 0}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Comments header */}
+        <div style={{ fontWeight: 700, marginBottom: 10 }}>
+          Comments {post.comments?.length ? `(${post.comments.length})` : ""}
+        </div>
+
+        {/* Comments list */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {post.comments && post.comments.length > 0 ? (
+            post.comments.map((comment) => (
+              <div key={comment.id} style={{ background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 12, padding: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <strong>{comment.userFullName || "Unknown user"}</strong>
+                  <span style={{ fontSize: 12, color: "#64748b" }}>{comment.createdAt ? new Date(comment.createdAt).toLocaleString() : ""}</span>
+                </div>
+                <p style={{ margin: "8px 0 0", lineHeight: 1.5 }}>{comment.commentText}</p>
+              </div>
+            ))
+          ) : (
+            <div style={{ color: "#64748b", fontSize: 13 }}>No comments yet — be the first to reply.</div>
+          )}
+        </div>
+
+        {/* Comment composer */}
+        <form onSubmit={(e) => handleCommentSubmit(e, post.id)} style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
+          <input
+            aria-label="Write a comment"
+            value={commentDrafts[post.id] || ""}
+            onChange={(e) => setCommentDrafts((current) => ({ ...current, [post.id]: e.target.value }))}
+            placeholder="Write a comment..."
+            style={{ flex: 1, border: "1px solid #e5e7eb", borderRadius: 10, padding: "8px 10px" }}
+          />
+          <button type="submit" className="btn-secondary" disabled={submittingId === post.id}>Reply</button>
+        </form>
+      </div>
+    </article>
+  );
+})}
+      </section>
     </div>
   );
 }
