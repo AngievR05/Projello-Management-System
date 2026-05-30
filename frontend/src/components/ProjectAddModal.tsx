@@ -9,6 +9,7 @@ interface ProjectAddModalProps {
   onSubmit: (data: ProjectFormData) => void;
   clientId?: string;      // optional - passed from action menu
   clientName?: string;    // prefill when opened from client row
+  generatedCode?: string; // prefill the generated code
 }
 
 interface ProjectFormData {
@@ -23,6 +24,7 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
   onClose,
   onSubmit,
   clientName,
+  generatedCode,
 }) => {
   const [formData, setFormData] = useState<ProjectFormData>({
     name: "",
@@ -55,6 +57,15 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
   const handleCancel = () => {
     setFormData({ name: "", description: "", clientName: "", dueDate: "" });
     onClose();
+  };
+
+  const handleCopyCode = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      alert("Code copied to clipboard.");
+    } catch {
+      alert("Failed to copy code.");
+    }
   };
 
   return (
@@ -140,6 +151,12 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
           />
         </div>
       </div>
+
+      <div className="signinText">
+        <strong>Code:</strong> {generatedCode}
+      </div>
+
+      
     </CustomModal>
   );
 };

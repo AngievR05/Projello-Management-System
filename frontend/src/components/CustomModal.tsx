@@ -1,29 +1,37 @@
 import React from "react";
 import { Modal } from "antd";
+import "../pages/login/LoginPage.css";
 
 interface CustomModalProps {
   open: boolean;
   onCancel: () => void;
-  title?: string;
+  title?: React.ReactNode;
   children: React.ReactNode;
   footer?: React.ReactNode;
   width?: number;
-    wrapClassName?: string;  // <-- Added this for the new modals on the management pages
+  wrapClassName?: string;
 }
 
-const CustomModal: React.FC<CustomModalProps> = ({ open, onCancel, title, children, footer, width, wrapClassName }) => (
+const CustomModal: React.FC<CustomModalProps> = ({
+  open,
+  onCancel,
+  title,
+  children,
+  footer,
+  width,
+  wrapClassName,
+}) => (
   <Modal
     open={open}
     onCancel={onCancel}
     title={title}
     footer={footer}
     width={width || 420}
-
-      wrapClassName={wrapClassName}
-
+    wrapClassName={`login-modal-wrap ${wrapClassName ?? ""}`.trim()}
+    className="login-modal"
     centered
     destroyOnHidden
-    mask={{ closable: !footer }}
+    maskClosable={!footer}
   >
     {children}
   </Modal>

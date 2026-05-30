@@ -8,6 +8,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;   // ← ADDED
 using Microsoft.AspNetCore.SignalR; // ← Do not remove
 using Projello.Api.Hubs; // ← Do not remove
+using System.Text.Json; // <- dont remove
 
 namespace Projello.Api.Controllers
 {
@@ -317,11 +318,17 @@ namespace Projello.Api.Controllers
                 message = $"{targetUser.FullName} joined {project.Name} as {member.AssignedAs ?? "Worker"}."
             };
 
-            if (joinedBy != null)
-            {
-                await _teamNotificationHub.Clients.User(userId!).SendAsync("WorkerJoinedProject", notification);
-            }
+            // if (joinedBy != null)
+            // {
+            //     await _teamNotificationHub.Clients.User(userId!).SendAsync("WorkerJoinedProject", notification);
+            // }
 
+            // before sending to adder
+            Console.WriteLine($"[Notify] To adder UserId={userId} target={dto.UserID} payload={JsonSerializer.Serialize(notification)}");
+            await _teamNotificationHub.Clients.User(userId!).SendAsync("WorkerJoinedProject", notification);
+
+            //before sending to aded user
+            Console.WriteLine($"[Notify] To added UserId={dto.UserID} payload={JsonSerializer.Serialize(notification)}");
             await _teamNotificationHub.Clients.User(dto.UserID).SendAsync("WorkerJoinedProject", notification);
 
             return Ok(new { message = "Member added successfully" });
