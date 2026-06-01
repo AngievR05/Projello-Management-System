@@ -35,10 +35,12 @@ type SiteImageUpdate = {
 function RecentSitePhotosSection({ 
   updates, 
   onAddPhoto, 
+  onImageClick,
   isUploading 
 }: { 
   updates: SiteImageUpdate[]; 
   onAddPhoto: () => void; 
+  onImageClick: (url: string) => void;
   isUploading: boolean;
 }) {
   const recentImages = updates.slice(0, 6);
@@ -93,7 +95,7 @@ function RecentSitePhotosSection({
                 borderRadius: "10px",
                 cursor: "pointer"
               }}
-              onClick={() => console.log("Clicked image:", update)}
+              onClick={() => onImageClick(update.imageUrl)}
             />
           ))
         ) : (

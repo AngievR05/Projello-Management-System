@@ -11,6 +11,9 @@ export function useProjectCall(projectId: number | string) {
   const [connectionState, setConnectionState] = useState<'disconnected' | 'connecting' | 'connected' | 'failed'>('disconnected');
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [activeVideoDeviceId, setActiveVideoDeviceId] = useState<string | null>(null);
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
 
   const callServiceRef = useRef<ProjectCallService | null>(null);
   const listenerRef = useRef<any>(null);
@@ -52,6 +55,44 @@ export function useProjectCall(projectId: number | string) {
     };
   }, []);
 
+  const syncCameraState = useCallback(() => {
+    if (!callServiceRef.current) return;
+
+    const peerManager = callServiceRef.current.getPeerManager();
+    setLocalStream(peerManager.getLocalStreamSync());
+    setCameraEnabled(peerManager.isCameraEnabled());
+    setActiveVideoDeviceId(peerManager.getCurrentVideoDeviceId());
+  }, []);
+
+  const refreshVideoDevices = useCallback(async () => {
+    if (!callServiceRef.current) return [];
+
+    const devices = await callServiceRef.current.getPeerManager().getVideoDevices();
+    setVideoDevices(devices);
+    return devices;
+  }, []);
+
+  const updateCameraState = useCallback(async (enabled: boolean, deviceId?: string | null) => {
+    if (!callServiceRef.current) return;
+
+    setError(null);
+
+    try {
+      const peerManager = callServiceRef.current.getPeerManager();
+
+      if (enabled) {
+        await peerManager.setCameraEnabled(true, deviceId ?? activeVideoDeviceId);
+      } else {
+        await peerManager.setCameraEnabled(false);
+      }
+
+      syncCameraState();
+      await refreshVideoDevices();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update camera');
+    }
+  }, [activeVideoDeviceId, refreshVideoDevices, syncCameraState]);
+
   const joinCall = useCallback(async () => {
     if (!callServiceRef.current) return;
 
@@ -67,6 +108,9 @@ export function useProjectCall(projectId: number | string) {
       if (stream) {
         setLocalStream(stream);
       }
+      setCameraEnabled(callServiceRef.current.getPeerManager().isCameraEnabled());
+      setActiveVideoDeviceId(callServiceRef.current.getPeerManager().getCurrentVideoDeviceId());
+      await refreshVideoDevices();
     } catch (err: any) {
       console.error("Failed to join call:", err);
       setError(err.message || "Failed to connect to call");
@@ -85,6 +129,9 @@ export function useProjectCall(projectId: number | string) {
     setRemoteStream(null);
     setConnectionState('disconnected');
     setError(null);
+    setCameraEnabled(true);
+    setActiveVideoDeviceId(null);
+    setVideoDevices([]);
   }, []);
 
   // === NEW: Check if a call is already active for this project ===
@@ -109,6 +156,14 @@ export function useProjectCall(projectId: number | string) {
     connectionState,
     isFetching,
     error,
+    cameraEnabled,
+    activeVideoDeviceId,
+    videoDevices,
+    refreshVideoDevices,
+    updateCameraState,
+    turnCameraOff: () => updateCameraState(false),
+    turnCameraOn: () => updateCameraState(true),
+    switchCamera: (deviceId: string) => updateCameraState(true, deviceId),
     checkActiveParticipants,   // use this in CallOverlay
   };
 }

@@ -26,6 +26,13 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
     connectionState,
     isFetching,
     error,
+    cameraEnabled,
+    activeVideoDeviceId,
+    videoDevices,
+    refreshVideoDevices,
+    turnCameraOff,
+    turnCameraOn,
+    switchCamera,
     checkActiveParticipants,   // ← NEW
   } = useProjectCall(projectId);
 
@@ -34,6 +41,7 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
 
   // NEW: Track how many people are already in the call
   const [activeParticipants, setActiveParticipants] = useState<string[]>([]);
+  const [cameraMenuOpen, setCameraMenuOpen] = useState(false);
 
   // After attaching local stream
   useEffect(() => {
@@ -66,7 +74,30 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
     }
   }, [isOpen, isJoined, checkActiveParticipants]);
 
+  useEffect(() => {
+    if (isOpen && isJoined) {
+      refreshVideoDevices();
+    } else {
+      setCameraMenuOpen(false);
+    }
+  }, [isOpen, isJoined, refreshVideoDevices]);
+
   if (!isOpen) return null;
+
+  const handleTurnCameraOff = async () => {
+    await turnCameraOff();
+    setCameraMenuOpen(false);
+  };
+
+  const handleTurnCameraOn = async () => {
+    await turnCameraOn();
+    setCameraMenuOpen(false);
+  };
+
+  const handleSwitchCamera = async (deviceId: string) => {
+    await switchCamera(deviceId);
+    setCameraMenuOpen(false);
+  };
 
   return (
     <div className="call-overlay-wrapper">
@@ -103,7 +134,12 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
                             <span className="user-role">{member.AssignedAs}</span>
                           )}
                         </div>
-                        <input type="checkbox" defaultChecked className="user-checkbox" />
+                        <input
+                          type="checkbox"
+                          defaultChecked
+                          className="user-checkbox"
+                          aria-label={`Select ${member.FullName || member.fullName || member.Name || 'team member'}`}
+                        />
                       </div>
                     ))
                   ) : (
@@ -166,10 +202,55 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
 
               {/* Bottom Controls */}
               <div className="call-controls">
-                <button className="control-btn">🎤 Mute</button>
-                <button className="control-btn">📹 Stop Video</button>
-                <button className="control-btn">🖥️ Share Screen</button>
-                <button onClick={leaveCall} className="control-btn end-call">
+                <div className="camera-control">
+                  <button
+                    type="button"
+                    className={`control-btn camera-btn ${cameraEnabled ? "is-on" : "is-off"}`}
+                    onClick={() => setCameraMenuOpen((open) => !open)}
+                    aria-haspopup="menu"
+                  >
+                    {cameraEnabled ? "📹 Camera" : "📷 Camera Off"}
+                  </button>
+
+                  {cameraMenuOpen && (
+                    <div className="camera-menu">
+                      {cameraEnabled ? (
+                        <button type="button" className="camera-menu__item" onClick={handleTurnCameraOff}>
+                          Turn camera off
+                        </button>
+                      ) : (
+                        <button type="button" className="camera-menu__item" onClick={handleTurnCameraOn}>
+                          Turn camera on
+                        </button>
+                      )}
+
+                      <div className="camera-menu__divider" />
+
+                      {videoDevices.length > 0 ? (
+                        videoDevices.map((device, index) => {
+                          const label = device.label || `Camera ${index + 1}`;
+                          const isActive = device.deviceId === activeVideoDeviceId;
+
+                          return (
+                            <button
+                              key={device.deviceId}
+                              type="button"
+                              className={`camera-menu__item ${isActive ? "is-active" : ""}`}
+                              onClick={() => handleSwitchCamera(device.deviceId)}
+                            >
+                              {label}
+                              {isActive ? " (active)" : ""}
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <div className="camera-menu__empty">No other cameras detected</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <button type="button" onClick={leaveCall} className="control-btn end-call">
                   End Call
                 </button>
               </div>

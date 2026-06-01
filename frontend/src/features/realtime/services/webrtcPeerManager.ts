@@ -14,6 +14,8 @@ export class WebRTCPeerManager {
   private peers: Map<string, RTCPeerConnection> = new Map();
   private localStream: MediaStream | null = null;
   private listeners: ((event: PeerConnectionEvent) => void)[] = [];
+  private cameraEnabled = true;
+  private currentVideoDeviceId: string | null = null;
   
   private iceServers: RTCIceServer[] = [];
   private configLoaded = false;
@@ -78,7 +80,7 @@ export class WebRTCPeerManager {
     };
   }
 
-  async getLocalStream(): Promise<MediaStream> {
+  async getLocalStream(videoDeviceId?: string | null): Promise<MediaStream> {
     if (this.localStream) {
       console.log('Local stream already exists');
       return this.localStream;
@@ -86,11 +88,17 @@ export class WebRTCPeerManager {
 
     console.log('Requesting camera + microphone...');
     try {
+      const videoConstraints = this.cameraEnabled
+        ? this.getVideoConstraints(videoDeviceId ?? this.currentVideoDeviceId)
+        : false;
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: videoConstraints,
         audio: true,
       });
       this.localStream = stream;
+      this.cameraEnabled = stream.getVideoTracks().length > 0;
+      this.currentVideoDeviceId = stream.getVideoTracks()[0]?.getSettings().deviceId ?? videoDeviceId ?? null;
       console.log('CAMERA OPENED SUCCESSFULLY');
       return stream;
     } catch (error: any) {
@@ -103,10 +111,100 @@ export class WebRTCPeerManager {
     return this.localStream;
   }
 
+  isCameraEnabled(): boolean {
+    return this.cameraEnabled;
+  }
+
+  getCurrentVideoDeviceId(): string | null {
+    return this.currentVideoDeviceId;
+  }
+
+  async getVideoDevices(): Promise<MediaDeviceInfo[]> {
+    if (!navigator.mediaDevices?.enumerateDevices) return [];
+
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return devices.filter((device) => device.kind === 'videoinput');
+  }
+
+  private getVideoConstraints(deviceId?: string | null): MediaTrackConstraints {
+    if (deviceId) {
+      return {
+        deviceId: { exact: deviceId },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      };
+    }
+
+    return {
+      width: { ideal: 1280 },
+      height: { ideal: 720 },
+    };
+  }
+
+  private async replaceVideoTrack(nextTrack: MediaStreamTrack | null) {
+    if (!this.localStream) return;
+
+    const existingVideoTracks = this.localStream.getVideoTracks();
+    const previousTrack = existingVideoTracks[0];
+
+    if (previousTrack && previousTrack !== nextTrack) {
+      previousTrack.stop();
+      this.localStream.removeTrack(previousTrack);
+    }
+
+    if (nextTrack && !this.localStream.getVideoTracks().includes(nextTrack)) {
+      this.localStream.addTrack(nextTrack);
+    }
+
+    for (const pc of this.peers.values()) {
+      const sender = pc.getSenders().find((item) => item.track?.kind === 'video');
+      if (sender) {
+        await sender.replaceTrack(nextTrack);
+      }
+    }
+  }
+
+  async setCameraEnabled(enabled: boolean, deviceId?: string | null): Promise<MediaStream> {
+    if (!enabled) {
+      this.cameraEnabled = false;
+      this.currentVideoDeviceId = null;
+      await this.replaceVideoTrack(null);
+      return this.localStream ?? new MediaStream();
+    }
+
+    this.cameraEnabled = true;
+
+    if (!this.localStream) {
+      await this.getLocalStream(deviceId ?? this.currentVideoDeviceId);
+      return this.localStream ?? new MediaStream();
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: this.getVideoConstraints(deviceId ?? this.currentVideoDeviceId),
+      audio: false,
+    });
+
+    const nextTrack = stream.getVideoTracks()[0];
+    if (!nextTrack) {
+      throw new Error('No camera track available');
+    }
+
+    await this.replaceVideoTrack(nextTrack);
+    this.currentVideoDeviceId = nextTrack.getSettings().deviceId ?? deviceId ?? this.currentVideoDeviceId;
+
+    return this.localStream;
+  }
+
+  async switchCamera(deviceId: string): Promise<MediaStream> {
+    return this.setCameraEnabled(true, deviceId);
+  }
+
   stopLocalStream() {
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
       this.localStream = null;
+      this.cameraEnabled = true;
+      this.currentVideoDeviceId = null;
     }
   }
 

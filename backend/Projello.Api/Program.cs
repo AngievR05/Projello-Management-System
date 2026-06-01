@@ -149,7 +149,7 @@ app.UseAuthentication();
 
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path.StartsWithSegments("/callhub"))
+    if (context.Request.Path.StartsWithSegments("/callhub") || context.Request.Path.StartsWithSegments("/teamnotificationHub")) 
     {
         var isAuth = context.User.Identity?.IsAuthenticated ?? false;
         var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value 

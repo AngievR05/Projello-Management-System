@@ -195,3 +195,52 @@ body {
   text-overflow: wrap;
   white-space: normal;
 }
+
+.login-modal-wrap .ant-modal-content {
+  background-color: #f0f0ec;
+  border-radius: 32px;
+  padding: 0;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.login-modal-wrap .ant-modal-header {
+  background: #f0f0ec;
+  border-bottom: none;
+  padding: 28px 32px 0;
+  margin-bottom: 0;
+}
+
+.login-modal-wrap .ant-modal-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a2420;
+  text-align: center;
+}
+
+.login-modal-wrap .ant-modal-body {
+  padding: 24px 32px 8px;
+}
+
+.login-modal-wrap .ant-modal-footer {
+  border-top: none;
+  padding: 0 32px 32px;
+}
+
+.login-modal-wrap .ant-btn {
+  border-radius: 1000px;
+  height: 46px;
+  font-weight: 700;
+  padding: 0 20px;
+}
+
+.login-modal-wrap .ant-btn-primary {
+  background: #5e745f;
+  border-color: #5e745f;
+}
+
+.login-modal-wrap .ant-btn-default {
+  background: #aaaba4;
+  color: #fff;
+  border-color: #aaaba4;
+}

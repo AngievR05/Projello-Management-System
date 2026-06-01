@@ -75,19 +75,25 @@ export default function AddProjectMemberModal({
     }
   };
 
+  const handleCopyCode = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      alert("Code copied to clipboard.");
+    } catch {
+      alert("Failed to copy code.");
+    }
+  };
+
   if (!open) return null;
 
   return (
     <div className="action-modal-overlay" onClick={onClose}>
-      <div className="action-modal" onClick={e => e.stopPropagation()}>
-        <div className="action-modal__header">
-          <h3 className="action-modal__title">Add Team Member</h3>
-          <button className="action-modal__close" onClick={onClose}>×</button>
-        </div>
+      <div className="login-card" onClick={(e) => e.stopPropagation()}>
+        <h1 className="login-title">Add Team Member</h1>
 
-        <div className="action-modal__body">
+        <div className="signinText">
           <select
-            className="action-modal__input"
+            className="login-input"
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
           >
@@ -100,7 +106,7 @@ export default function AddProjectMemberModal({
           </select>
 
           <select
-            className="action-modal__input"
+            className="login-input signup-role-select"
             value={assignedAs}
             onChange={(e) => setAssignedAs(e.target.value)}
           >
@@ -109,16 +115,19 @@ export default function AddProjectMemberModal({
           </select>
         </div>
 
-        <div className="action-modal__actions">
+        <div className="login-button-row">
           <button
-            className="action-modal__btn action-modal__btn--primary"
+            className="login-cancel-btn"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button
+            className="login-submit-btn"
             onClick={handleSubmit}
             disabled={submitting || !selectedUserId}
           >
             {submitting ? "Adding..." : "Add to Project"}
-          </button>
-          <button className="action-modal__btn action-modal__btn--ghost" onClick={onClose}>
-            Cancel
           </button>
         </div>
       </div>
