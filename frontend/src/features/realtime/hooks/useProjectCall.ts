@@ -134,6 +134,12 @@ export function useProjectCall(projectId: number | string) {
     setVideoDevices([]);
   }, []);
 
+  // === NEW: ringUsers ===
+  const ringUsers = useCallback(async (targetUserIds: string[]) => {
+    if (!callServiceRef.current) return;
+    await callServiceRef.current.ringUsers(projectId.toString(), targetUserIds);
+  }, [projectId]);
+
   // === NEW: Check if a call is already active for this project ===
   const checkActiveParticipants = useCallback(async (): Promise<string[]> => {
     if (!callServiceRef.current) return [];
@@ -150,6 +156,7 @@ export function useProjectCall(projectId: number | string) {
   return {
     joinCall,
     leaveCall,
+    ringUsers,                    // ← NEW
     isJoined,
     localStream,
     remoteStream,
