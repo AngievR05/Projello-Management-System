@@ -3,9 +3,6 @@ import { message as antdMessage } from "antd";
 import { createSignalRClient } from "../services/signalrClient";
 import { API_BASE_URL } from "../../../config";
 
-const hubUrl = "/teamNotificationHub";
-const fullHubUrl = `${API_BASE_URL.replace(/\/+$/, "")}${hubUrl}`;
-
 type TeamJoinedNotification = {
   projectId: number;
   projectName: string;
@@ -17,7 +14,7 @@ type TeamJoinedNotification = {
 const teamNotificationClient = createSignalRClient<{
   WorkerJoinedProject: [TeamJoinedNotification];
 }>({
-  hubUrl: fullHubUrl,
+   hubUrl: `${API_BASE_URL}/teamNotificationHub`,
   getAccessToken: () => {
     const token = localStorage.getItem("token");
     if (!token) return null;
@@ -38,7 +35,6 @@ export function useTeamNotifications() {
         await teamNotificationClient.start();
 
         unsubscribe = teamNotificationClient.on("WorkerJoinedProject", (payload) => {
-          console.log("WorkerJoinedProject payload:", payload);
           antdMessage.success(payload.message || `${payload.memberName} joined ${payload.projectName}.`);
         });
       } catch (err) {
