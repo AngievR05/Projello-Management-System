@@ -7,7 +7,6 @@ import { SortButton } from "../../components/SortButton";
 import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
 import { API_BASE_URL } from "../../config";
 import { AddButton } from "../../components/AddButton";
-// import { WorkerAddModal } from "../../components/WorkerAddModal";
 import CustomModal from "../../components/CustomModal";
 
 interface UserDisplay {
@@ -288,10 +287,6 @@ export default function WorkersPage() {
 								  />
 							  )}
 
-							  {/* <AddButton
-								  label="Add Worker"
-								  onClick={() => setWorkerModalOpen(true)}
-							  /> */}
 						  </div>
             </div>
           </div>
@@ -322,11 +317,6 @@ export default function WorkersPage() {
         </section>
       </div>
 
-      {/* <WorkerAddModal
-        open={workerModalOpen}
-        onClose={() => setWorkerModalOpen(false)}
-        onSubmit={handleWorkerSubmit}
-      /> */}
       <CustomModal
         open={inviteCodeOpen}
         onCancel={() => setInviteCodeOpen(false)}
