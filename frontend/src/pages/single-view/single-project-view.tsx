@@ -491,6 +491,7 @@ export default function SingleProjectViewPage() {
           <RecentSitePhotosSection 
             updates={siteUpdates} 
             onAddPhoto={handleAddPhoto}
+            onImageClick={(url) => console.log(url)} // <-- Quick fix inline
             isUploading={isUploading}
           />
         </>
@@ -514,6 +515,7 @@ export default function SingleProjectViewPage() {
         style={{ display: "none" }}
         accept="image/*"
         onChange={handleFileChange}
+        aria-label="Upload site photo"
       />
 
       {/* Team Members Section + Add Button */}
