@@ -11,6 +11,8 @@ export function useProjectCall(projectId: number | string) {
   const [connectionState, setConnectionState] = useState<'disconnected' | 'connecting' | 'connected' | 'failed'>('disconnected');
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // === Camera State ===
   const [cameraEnabled, setCameraEnabled] = useState(true);
   const [activeVideoDeviceId, setActiveVideoDeviceId] = useState<string | null>(null);
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
@@ -55,44 +57,6 @@ export function useProjectCall(projectId: number | string) {
     };
   }, []);
 
-  const syncCameraState = useCallback(() => {
-    if (!callServiceRef.current) return;
-
-    const peerManager = callServiceRef.current.getPeerManager();
-    setLocalStream(peerManager.getLocalStreamSync());
-    setCameraEnabled(peerManager.isCameraEnabled());
-    setActiveVideoDeviceId(peerManager.getCurrentVideoDeviceId());
-  }, []);
-
-  const refreshVideoDevices = useCallback(async () => {
-    if (!callServiceRef.current) return [];
-
-    const devices = await callServiceRef.current.getPeerManager().getVideoDevices();
-    setVideoDevices(devices);
-    return devices;
-  }, []);
-
-  const updateCameraState = useCallback(async (enabled: boolean, deviceId?: string | null) => {
-    if (!callServiceRef.current) return;
-
-    setError(null);
-
-    try {
-      const peerManager = callServiceRef.current.getPeerManager();
-
-      if (enabled) {
-        await peerManager.setCameraEnabled(true, deviceId ?? activeVideoDeviceId);
-      } else {
-        await peerManager.setCameraEnabled(false);
-      }
-
-      syncCameraState();
-      await refreshVideoDevices();
-    } catch (err: any) {
-      setError(err.message || 'Failed to update camera');
-    }
-  }, [activeVideoDeviceId, refreshVideoDevices, syncCameraState]);
-
   const joinCall = useCallback(async () => {
     if (!callServiceRef.current) return;
 
@@ -108,9 +72,11 @@ export function useProjectCall(projectId: number | string) {
       if (stream) {
         setLocalStream(stream);
       }
-      setCameraEnabled(callServiceRef.current.getPeerManager().isCameraEnabled());
-      setActiveVideoDeviceId(callServiceRef.current.getPeerManager().getCurrentVideoDeviceId());
-      await refreshVideoDevices();
+
+      // Sync initial camera state
+      const pm = callServiceRef.current.getPeerManager();
+      setCameraEnabled(pm.isCameraEnabled());
+      setActiveVideoDeviceId(pm.getCurrentVideoDeviceId());
     } catch (err: any) {
       console.error("Failed to join call:", err);
       setError(err.message || "Failed to connect to call");
@@ -131,7 +97,6 @@ export function useProjectCall(projectId: number | string) {
     setError(null);
     setCameraEnabled(true);
     setActiveVideoDeviceId(null);
-    setVideoDevices([]);
   }, []);
 
   // === NEW: ringUsers ===
@@ -146,6 +111,43 @@ export function useProjectCall(projectId: number | string) {
     return await callServiceRef.current.getActiveParticipants(projectId.toString());
   }, [projectId]);
 
+  // ==================== CAMERA CONTROLS ====================
+
+  const turnCameraOff = useCallback(async () => {
+    const pm = callServiceRef.current?.getPeerManager();
+    if (!pm) return;
+
+    await pm.setCameraEnabled(false);
+    setCameraEnabled(false);
+    setActiveVideoDeviceId(null);
+  }, []);
+
+  const turnCameraOn = useCallback(async () => {
+    const pm = callServiceRef.current?.getPeerManager();
+    if (!pm) return;
+
+    await pm.setCameraEnabled(true);
+    setCameraEnabled(true);
+    setActiveVideoDeviceId(pm.getCurrentVideoDeviceId());
+  }, []);
+
+  const switchCamera = useCallback(async (deviceId: string) => {
+    const pm = callServiceRef.current?.getPeerManager();
+    if (!pm) return;
+
+    await pm.switchCamera(deviceId);
+    setActiveVideoDeviceId(deviceId);
+    setCameraEnabled(true);
+  }, []);
+
+  const refreshVideoDevices = useCallback(async () => {
+    const pm = callServiceRef.current?.getPeerManager();
+    if (!pm) return;
+
+    const devices = await pm.getVideoDevices();
+    setVideoDevices(devices);
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -156,21 +158,22 @@ export function useProjectCall(projectId: number | string) {
   return {
     joinCall,
     leaveCall,
-    ringUsers,                    // ← NEW
+    ringUsers,
     isJoined,
     localStream,
     remoteStream,
     connectionState,
     isFetching,
     error,
+    checkActiveParticipants,
+
+    // === Camera controls (NEW) ===
     cameraEnabled,
     activeVideoDeviceId,
     videoDevices,
     refreshVideoDevices,
-    updateCameraState,
-    turnCameraOff: () => updateCameraState(false),
-    turnCameraOn: () => updateCameraState(true),
-    switchCamera: (deviceId: string) => updateCameraState(true, deviceId),
-    checkActiveParticipants,   // use this in CallOverlay
+    turnCameraOff,
+    turnCameraOn,
+    switchCamera,
   };
 }

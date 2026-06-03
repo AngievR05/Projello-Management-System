@@ -1,31 +1,31 @@
 import { API_BASE_URL } from '../../../config';
 
-export type PeerConnectionEvent = 
+export type PeerConnectionEvent =
   | { type: 'ice-candidate'; candidate: RTCIceCandidateInit; peerId: string }
   | { type: 'track'; stream: MediaStream; peerId: string }
   | { type: 'connection-state-change'; state: string; peerId: string }
   | { type: 'offer'; sdp: RTCSessionDescriptionInit; peerId: string }
   | { type: 'answer'; sdp: RTCSessionDescriptionInit; peerId: string };
 
-// === SINGLETON INSTANCE (added) ===
+// === SINGLETON INSTANCE ===
 let peerManagerInstance: WebRTCPeerManager | null = null;
 
 export class WebRTCPeerManager {
   private peers: Map<string, RTCPeerConnection> = new Map();
   private localStream: MediaStream | null = null;
   private listeners: ((event: PeerConnectionEvent) => void)[] = [];
+
+  // === Camera state (from v2) ===
   private cameraEnabled = true;
   private currentVideoDeviceId: string | null = null;
-  
+
   private iceServers: RTCIceServer[] = [];
   private configLoaded = false;
 
-  // Constructor is now private so only getInstance() can create it
   private constructor() {
     this.loadIceServers();
   }
 
-  // === NEW: Singleton getter (added) ===
   public static getInstance(): WebRTCPeerManager {
     if (!peerManagerInstance) {
       peerManagerInstance = new WebRTCPeerManager();
@@ -36,8 +36,8 @@ export class WebRTCPeerManager {
   private async loadIceServers() {
     try {
       const token = localStorage.getItem('token') || '';
-      const cleanToken = token.startsWith('"') && token.endsWith('"') 
-        ? token.slice(1, -1) 
+      const cleanToken = token.startsWith('"') && token.endsWith('"')
+        ? token.slice(1, -1)
         : token;
 
       const response = await fetch(`${API_BASE_URL}/api/webrtc/config`, {
@@ -57,13 +57,18 @@ export class WebRTCPeerManager {
 
       console.log('WebRTC ICE Servers loaded successfully from backend');
       this.configLoaded = true;
-
     } catch (error) {
       console.error('Failed to load WebRTC config:', error);
+      // Fallback (dev only)
       this.iceServers = [
         { urls: 'stun:stun.l.google.com:19302' },
         {
-          urls: ["turn:global.relay.metered.ca:80", "turn:global.relay.metered.ca:80?transport=tcp", "turn:global.relay.metered.ca:443", "turns:global.relay.metered.ca:443?transport=tcp"],
+          urls: [
+            "turn:global.relay.metered.ca:80",
+            "turn:global.relay.metered.ca:80?transport=tcp",
+            "turn:global.relay.metered.ca:443",
+            "turns:global.relay.metered.ca:443?transport=tcp"
+          ],
           username: "3e7b559d3b4bbc9012e16d54",
           credential: "7szZjkmvlFyDOuK7"
         }
@@ -79,6 +84,8 @@ export class WebRTCPeerManager {
       iceTransportPolicy: "all"
     };
   }
+
+  // ==================== CAMERA / LOCAL STREAM ====================
 
   async getLocalStream(videoDeviceId?: string | null): Promise<MediaStream> {
     if (this.localStream) {
@@ -96,9 +103,11 @@ export class WebRTCPeerManager {
         video: videoConstraints,
         audio: true,
       });
+
       this.localStream = stream;
       this.cameraEnabled = stream.getVideoTracks().length > 0;
       this.currentVideoDeviceId = stream.getVideoTracks()[0]?.getSettings().deviceId ?? videoDeviceId ?? null;
+
       console.log('CAMERA OPENED SUCCESSFULLY');
       return stream;
     } catch (error: any) {
@@ -121,7 +130,6 @@ export class WebRTCPeerManager {
 
   async getVideoDevices(): Promise<MediaDeviceInfo[]> {
     if (!navigator.mediaDevices?.enumerateDevices) return [];
-
     const devices = await navigator.mediaDevices.enumerateDevices();
     return devices.filter((device) => device.kind === 'videoinput');
   }
@@ -134,7 +142,6 @@ export class WebRTCPeerManager {
         height: { ideal: 720 },
       };
     }
-
     return {
       width: { ideal: 1280 },
       height: { ideal: 720 },
@@ -156,6 +163,7 @@ export class WebRTCPeerManager {
       this.localStream.addTrack(nextTrack);
     }
 
+    // Update all existing peer connections
     for (const pc of this.peers.values()) {
       const sender = pc.getSenders().find((item) => item.track?.kind === 'video');
       if (sender) {
@@ -164,6 +172,10 @@ export class WebRTCPeerManager {
     }
   }
 
+  /**
+   * Turn camera on/off during an active call.
+   * This is what your "close/open camera" button should call.
+   */
   async setCameraEnabled(enabled: boolean, deviceId?: string | null): Promise<MediaStream> {
     if (!enabled) {
       this.cameraEnabled = false;
@@ -179,6 +191,7 @@ export class WebRTCPeerManager {
       return this.localStream ?? new MediaStream();
     }
 
+    // Get fresh video track (common pattern — can't reliably "un-stop" a track)
     const stream = await navigator.mediaDevices.getUserMedia({
       video: this.getVideoConstraints(deviceId ?? this.currentVideoDeviceId),
       audio: false,
@@ -207,6 +220,8 @@ export class WebRTCPeerManager {
       this.currentVideoDeviceId = null;
     }
   }
+
+  // ==================== PEER CONNECTION ====================
 
   private async ensurePeerConnection(peerId: string): Promise<RTCPeerConnection> {
     if (this.peers.has(peerId)) {
@@ -314,7 +329,6 @@ export class WebRTCPeerManager {
     this.peers.forEach(pc => pc.close());
     this.peers.clear();
     this.stopLocalStream();
-    // NOTE: We no longer clear listeners here to prevent breaking the service listener
-    // this.listeners = [];
+    // Do NOT clear listeners — prevents breaking the service listener in useProjectCall
   }
 }
