@@ -51,13 +51,6 @@ function RecentSitePhotosSection({
     <section className="single-project-view__photo-section">
       <div className="single-project-view__panel-header-row">
         <h3 className="single-project-view__panel-title">Recent Site Photos</h3>
-        <button 
-          type="button" 
-          className="single-project-view__view-all-button"
-          onClick={() => console.log("Navigate to Gallery")}
-        >
-          View All →
-        </button>
       </div>
 
       <div style={{
@@ -144,7 +137,7 @@ export default function SingleProjectViewPage() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [activeTab, setActiveTab] = useState<"overview" | "discussion" | "gallery">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "discussion" >("overview");
 
   //Rename project function
   const [showRenameModal, setShowRenameModal] = useState(false);
@@ -578,12 +571,6 @@ export default function SingleProjectViewPage() {
             Discussion
           </button>
           
-          <button 
-            className={`single-project-view__tab ${activeTab === "gallery" ? "single-project-view__tab--active" : ""}`}
-            onClick={() => setActiveTab("gallery")}
-          >
-            Gallery
-          </button>
         </div>
       </div>
 
