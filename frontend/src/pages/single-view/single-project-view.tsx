@@ -12,7 +12,7 @@ import CustomModal from "../../components/CustomModal";
 
 import { useIncomingCallNotifications } from "../../features/realtime/hooks/useIncomingCallNotifications";
 
-type ProjectDetails= {
+type ProjectDetails = {
   projectID: number;
   name: string;
   description: string;
@@ -144,9 +144,19 @@ export default function SingleProjectViewPage() {
   const [renameValue, setRenameValue] = useState("");
   const [renameSaving, setRenameSaving] = useState(false);
 
+  // Edit description function
+  const [showEditDescModal, setShowEditDescModal] = useState(false);
+  const [descValue, setDescValue] = useState("");
+  const [descSaving, setDescSaving] = useState(false);
+
   const openRenameModal = () => {
     setRenameValue(project?.name || "");
     setShowRenameModal(true);
+  };
+
+  const openEditDescModal = () => {
+    setDescValue(project?.description || "");
+    setShowEditDescModal(true);
   };
 
   const handleRenameProject = async () => {
@@ -189,6 +199,43 @@ export default function SingleProjectViewPage() {
       antdMessage.error(err.message || "Failed to rename project.");
     } finally {
       setRenameSaving(false);
+    }
+  };
+
+  const handleUpdateDescription = async () => {
+    if (!project) return;
+
+    setDescSaving(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/api/projects/${project.projectID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          name: project.name,
+          description: descValue.trim(),
+          clientID: project.clientID,
+          startDate: project.startDate,
+          dueDate: project.dueDate,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to update description.");
+      }
+
+      setProject((prev) => (prev ? { ...prev, description: descValue.trim() } : prev));
+      antdMessage.success("Project description updated successfully.");
+      setShowEditDescModal(false);
+    } catch (err: any) {
+      antdMessage.error(err.message || "Failed to update description.");
+    } finally {
+      setDescSaving(false);
     }
   };
 
@@ -603,7 +650,18 @@ export default function SingleProjectViewPage() {
         <>
           <div className="single-project-view__main-grid">
             <div className="single-project-view__panel">
-              <h3 className="single-project-view__panel-title">Description</h3>
+              <div className="single-project-view__panel-header-row" style={{ marginBottom: "12px" }}>
+                <h3 className="single-project-view__panel-title" style={{ margin: 0 }}>Description</h3>
+                {[4].includes(currentUserRole) && (
+                  <button
+                    type="button"
+                    onClick={openEditDescModal}
+                    className="single-project-view__rename-link"
+                  >
+                    Edit Description
+                  </button>
+                )}
+              </div>
               <p className="single-project-view__project-description">
                 {project.description || "No description provided."}
               </p>
@@ -872,6 +930,56 @@ export default function SingleProjectViewPage() {
               onChange={(e) => setRenameValue(e.target.value)}
               className="project-add-modal__input"
               placeholder="Enter new project name"
+            />
+          </div>
+        </CustomModal>
+      )}
+
+      {/* Edit Description Modal */}
+      {showEditDescModal && (
+        <CustomModal
+          open={showEditDescModal}
+          onCancel={() => setShowEditDescModal(false)}
+          title="Edit Project Description"
+          footer={[
+            <button
+              key="cancel"
+              type="button"
+              className="single-project-view__view-all-button"
+              onClick={() => setShowEditDescModal(false)}
+            >
+              Cancel
+            </button>,
+            <button
+              key="save"
+              type="button"
+              className="single-project-view__call-button"
+              onClick={handleUpdateDescription}
+              disabled={descSaving}
+            >
+              {descSaving ? "Saving..." : "Save Description"}
+            </button>,
+          ]}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <label style={{ fontWeight: 600, color: "var(--text-dark)" }}>
+              Description
+            </label>
+            <textarea
+              value={descValue}
+              onChange={(e) => setDescValue(e.target.value)}
+              className="project-add-modal__input"
+              placeholder="Enter project description..."
+              rows={5}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                fontSize: "14px",
+                border: "1px solid #d9d9d9",
+                borderRadius: "6px",
+                resize: "vertical",
+                outline: "none"
+              }}
             />
           </div>
         </CustomModal>
