@@ -18,15 +18,21 @@ type ClientSummary = {
     blacklistClients: number;
 };
 
-const formatCurrency = (value: number | null) => {
+const formatCurrency = (value: any) => {
     if (value === null || value === undefined) return "N/A";
+    
+    let numericValue = typeof value === "string" 
+        ? parseFloat(value.replace(/[^0-9.-]/g, "")) 
+        : value;
+
+    if (isNaN(numericValue)) return "N/A";
+
     return new Intl.NumberFormat("en-ZA", {
         style: "currency",
         currency: "ZAR",
         maximumFractionDigits: 0,
-    }).format(value);
+    }).format(numericValue);
 };
-
 const getInitials = (fullName?: string) => {
     if (!fullName) return "--";
     const parts = fullName.split(" ").filter(Boolean);
@@ -65,7 +71,7 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject }: ActionModa
         setBusy(true);
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch(`${API_BASE_URL}/api/clients/${row.clientId}/blacklist`, {
+            const res = await fetch(`${API_BASE_URL}/api/cls/${row.clientId}/blacklist`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -272,7 +278,7 @@ export default function ClientsPage() {
 
         const data = await res.json();
         const mapped: ManagementClientRow[] = (data ?? []).map((c: any) => ({
-            clientId: String(c.clientID ?? c.ClientID ?? c.ClientId ?? ""),
+            clientId: String(c.clientId ?? c.ClientId ?? c.ClientId ?? ""),
             initials: getInitials(c.name ?? c.Name),
             name: c.name ?? c.Name ?? "",
             company: c.company ?? c.Company ?? "",
@@ -297,9 +303,8 @@ export default function ClientsPage() {
         });
     } catch (err: any) {
         setError(err.message || "Failed to fetch clients");
-    } finally {
         setLoading(false);
-    }
+    } 
 };
 
     const fetchClientSummary = async () => {
@@ -330,7 +335,9 @@ export default function ClientsPage() {
     };
 
     const refreshClientsPageData = async () => {
+        setLoading(true);
         await Promise.all([fetchClients(), fetchClientSummary()]);
+        setLoading(false);
     };
 
     useEffect(() => {
@@ -425,7 +432,7 @@ export default function ClientsPage() {
                 <ClientActionModal
                     row={actionRow}
                     onClose={() => setActionRow(null)}
-                    onRefresh={fetchClients}
+                    onRefresh={refreshClientsPageData} // 
                     onAddProject={handleAddProject}
                 />
             )}
