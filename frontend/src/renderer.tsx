@@ -3,7 +3,10 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
 
-import "antd/dist/reset.css";
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme) {
+  document.documentElement.setAttribute("data-theme", savedTheme);
+}
 
 const container = document.getElementById("root");
 if (container) {
