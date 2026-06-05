@@ -101,12 +101,12 @@ namespace Projello.Tests
 
             var firstResult = await controller.CreateClient(dto);
             var ok = Assert.IsType<OkObjectResult>(firstResult);
-            Assert.Contains("successfully", ok.Value.ToString() ?? "");
+            Assert.Contains("successfully", ok.Value?.ToString() ?? "");
 
             // Duplicate in same company
             var dupResult = await controller.CreateClient(dto);
             var badRequest = Assert.IsType<BadRequestObjectResult>(dupResult);
-            Assert.Contains("already exists", badRequest.Value.ToString() ?? "");
+            Assert.Contains("already exists", badRequest.Value?.ToString() ?? "");
         }
 
         [Fact]
@@ -161,11 +161,102 @@ namespace Projello.Tests
             };
 
             var result = await controller.GetClientSummary();
-            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            
+            // FIXED: Removed the .Result from result.Result
+            var okResult = Assert.IsType<OkObjectResult>(result); 
             var summary = Assert.IsType<ClientSummaryDto>(okResult.Value);
 
             Assert.Equal(2, summary.ActiveClients);
             Assert.Equal(1, summary.BlacklistClients);
+        }
+
+        [Fact]
+        public async Task GetClient_ClientDoesNotExist_ReturnsNotFound()
+        {
+            var context = GetInMemoryDbContext();
+            var userId = "foreman-123";
+            context.Users.Add(new User { Id = userId, FullName = "Foreman", Email = "foreman@test.com", CompanyId = 5 });
+            context.SaveChanges();
+
+            var userManager = GetMockUserManager(context);
+            var controller = new ClientsController(context, userManager);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateMockUser(userId, "2") }
+            };
+
+            var result = await controller.GetClient(999);
+
+            Assert.True(result is NotFoundResult || result is NotFoundObjectResult, "Expected a NotFound response but received a different status.");
+        }
+
+        [Fact]
+        public async Task GetClient_BelongsToDifferentCompany_ReturnsForbid()
+        {
+            var context = GetInMemoryDbContext();
+            var userId = "foreman-123";
+            context.Companies.AddRange(
+                new Company { CompanyID = 5, Name = "My Company" },
+                new Company { CompanyID = 99, Name = "Competitor Company" }
+            );
+            context.Clients.Add(new Client { ClientID = 10, Name = "Foreign Client Ltd", CompanyID = 99 });
+            context.Users.Add(new User { Id = userId, FullName = "Foreman", Email = "foreman@test.com", CompanyId = 5 });
+            context.SaveChanges();
+
+            var userManager = GetMockUserManager(context);
+            var controller = new ClientsController(context, userManager);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateMockUser(userId, "2") } 
+            };
+
+            var result = await controller.GetClient(10);
+
+            Assert.IsType<ForbidResult>(result);
+        }
+
+        [Fact]
+        public async Task GetClient_OwnCompanyClient_ReturnsSuccessAndData()
+        {
+            var context = GetInMemoryDbContext();
+            var userId = "foreman-123";
+            context.Companies.Add(new Company { CompanyID = 5, Name = "My Company" });
+            context.Clients.Add(new Client { ClientID = 10, Name = "Valid Client", CompanyID = 5 });
+            context.Users.Add(new User { Id = userId, FullName = "Foreman", Email = "foreman@test.com", CompanyId = 5 });
+            context.SaveChanges();
+
+            var userManager = GetMockUserManager(context);
+            var controller = new ClientsController(context, userManager);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateMockUser(userId, "2") }
+            };
+
+            var result = await controller.GetClient(10);
+
+            Assert.IsType<OkObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task BlacklistClient_ClientDoesNotExist_ReturnsNotFound()
+        {
+            var context = GetInMemoryDbContext();
+            var userId = "foreman-123";
+            context.Users.Add(new User { Id = userId, FullName = "Foreman", Email = "foreman@test.com", CompanyId = 5 });
+            context.SaveChanges();
+
+            var userManager = GetMockUserManager(context);
+            var controller = new ClientsController(context, userManager);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateMockUser(userId, "2") }
+            };
+
+            var dto = new BlacklistClientDto { Reason = "Non-payment" };
+
+            var result = await controller.BlacklistClient(999, dto);
+
+            Assert.True(result is NotFoundResult || result is NotFoundObjectResult, "Expected a NotFound response but received a different status.");
         }
     }
 }

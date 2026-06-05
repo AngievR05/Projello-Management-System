@@ -47,7 +47,6 @@ namespace Projello.Api.Tests.Controllers
             _controller = new ProjectsController(_context, _userManagerMock.Object, _hubContextMock.Object);
         }
 
-        // Helper to simulate a logged-in user
         private void SetCurrentUser(string userId, string roleId)
         {
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
@@ -88,27 +87,25 @@ namespace Projello.Api.Tests.Controllers
         public async Task GetProjects_AsStandardUser_ReturnsOnlyJoinedProjects()
         {
             var userId = "user-1";
-            SetCurrentUser(userId, "2"); // Standard User
+            SetCurrentUser(userId, "2"); 
 
             _userManagerMock.Setup(u => u.FindByIdAsync(userId))
                 .ReturnsAsync(new User { Id = userId, CompanyId = 10 });
 
-            // Project they belong to (Sanitized with Required Properties)
             _context.Projects.Add(new Project 
             { 
                 ProjectID = 1, 
                 Name = "Project A", 
-                CreatedByUserID = "admin-1", 
+                CreatedByUserID = userId, 
                 Client = new Client { CompanyID = 10, Name = "Test Client" } 
             });
             _context.ProjectMembers.Add(new ProjectMember { ProjectID = 1, UserID = userId, AssignedAs = "Worker" });
             
-            // Project in their company they DONT belong to
             _context.Projects.Add(new Project 
             { 
                 ProjectID = 2, 
                 Name = "Project B", 
-                CreatedByUserID = "admin-1", 
+                CreatedByUserID = userId, 
                 Client = new Client { CompanyID = 10, Name = "Test Client" } 
             });
 
@@ -119,7 +116,29 @@ namespace Projello.Api.Tests.Controllers
             var actionResult = Assert.IsType<OkObjectResult>(result.Result);
             var projects = Assert.IsAssignableFrom<IEnumerable<ProjectReadDto>>(actionResult.Value);
             
-            // Should only see Project 1
+            Assert.Single(projects); 
+            Assert.Equal(1, projects.First().ProjectID);
+        }
+
+        [Fact]
+        public async Task GetProjects_AsCompanyOwner_ReturnsAllCompanyProjects()
+        {
+            var userId = "owner-1";
+            SetCurrentUser(userId, "4"); // Role 4 = Company Owner
+
+            _userManagerMock.Setup(u => u.FindByIdAsync(userId))
+                .ReturnsAsync(new User { Id = userId, CompanyId = 10 });
+
+            // FIX: Added required CreatedByUserID
+            _context.Projects.Add(new Project { ProjectID = 1, Name = "Project A", CreatedByUserID = userId, Client = new Client { CompanyID = 10, Name = "Client A" } });
+            _context.Projects.Add(new Project { ProjectID = 2, Name = "Project B", CreatedByUserID = userId, Client = new Client { CompanyID = 99, Name = "Client B" } });
+            await _context.SaveChangesAsync();
+
+            var result = await _controller.GetProjects();
+
+            var actionResult = Assert.IsType<OkObjectResult>(result.Result);
+            var projects = Assert.IsAssignableFrom<IEnumerable<ProjectReadDto>>(actionResult.Value);
+            
             Assert.Single(projects); 
             Assert.Equal(1, projects.First().ProjectID);
         }
@@ -140,24 +159,21 @@ namespace Projello.Api.Tests.Controllers
         public async Task GetProject_CompanyMismatch_ReturnsForbid()
         {
             var userId = "owner-1";
-            SetCurrentUser(userId, "4"); // Owner
+            SetCurrentUser(userId, "4"); 
 
             _userManagerMock.Setup(u => u.FindByIdAsync(userId))
                 .ReturnsAsync(new User { Id = userId, CompanyId = 10 });
 
-            // Project belongs to company 99
             _context.Projects.Add(new Project 
             { 
                 ProjectID = 1, 
                 Name = "Project Foreign", 
-                CreatedByUserID = "admin-1", 
+                CreatedByUserID = userId, 
                 Client = new Client { CompanyID = 99, Name = "Test Client" } 
             });
             await _context.SaveChangesAsync();
 
             var result = await _controller.GetProject(1);
-
-            // Owner shouldn't see projects outside their company
             Assert.IsType<ForbidResult>(result.Result);
         }
 
@@ -170,19 +186,50 @@ namespace Projello.Api.Tests.Controllers
             _userManagerMock.Setup(u => u.FindByIdAsync(userId))
                 .ReturnsAsync(new User { Id = userId, CompanyId = 10 });
 
-            // Project is in their company, but they aren't a member
             _context.Projects.Add(new Project 
             { 
                 ProjectID = 1, 
                 Name = "Project Internal", 
-                CreatedByUserID = "admin-1", 
+                CreatedByUserID = userId, 
                 Client = new Client { CompanyID = 10, Name = "Test Client" } 
             });
             await _context.SaveChangesAsync();
 
             var result = await _controller.GetProject(1);
-
             Assert.IsType<ForbidResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task GetProject_AuthorizedUser_ReturnsProject()
+        {
+            var userId = "user-1";
+            SetCurrentUser(userId, "2"); 
+
+            // FIX: Explicitly seed the User object into context to avoid NullReferenceException during mapping projections
+            var userEntity = new User { Id = userId, CompanyId = 10, FullName = "Test User", Email = "test@test.com" };
+            _context.Users.Add(userEntity);
+
+            _userManagerMock.Setup(u => u.FindByIdAsync(userId))
+                .ReturnsAsync(userEntity);
+
+            var client = new Client { CompanyID = 10, Name = "Test Client" };
+            var project = new Project 
+            { 
+                ProjectID = 1, 
+                Name = "Project Internal", 
+                CreatedByUserID = userId, 
+                Client = client 
+            };
+            _context.Projects.Add(project);
+            
+            _context.ProjectMembers.Add(new ProjectMember { ProjectID = 1, UserID = userId, User = userEntity, AssignedAs = "Worker" });
+            await _context.SaveChangesAsync();
+
+            var result = await _controller.GetProject(1);
+
+            var actionResult = Assert.IsType<OkObjectResult>(result.Result);
+            var projectDto = Assert.IsType<ProjectReadDto>(actionResult.Value);
+            Assert.Equal(1, projectDto.ProjectID);
         }
 
         #endregion
@@ -228,17 +275,15 @@ namespace Projello.Api.Tests.Controllers
             SetCurrentUser(userId, "4"); 
 
             _userManagerMock.Setup(u => u.FindByIdAsync(userId))
-                .ReturnsAsync(new User { Id = userId, CompanyId = 10 }); // User is in Company 10
+                .ReturnsAsync(new User { Id = userId, CompanyId = 10 }); 
 
-            // Client belongs to Company 99
             _context.Clients.Add(new Client { ClientID = 5, CompanyID = 99, Name = "Test Client" });
             await _context.SaveChangesAsync();
 
             var dto = new ProjectCreateDto { ClientID = 5, Name = "Test" };
-            
             var result = await _controller.CreateProject(dto);
 
-            var actionResult = Assert.IsType<ForbidResult>(result.Result);
+            Assert.IsType<ForbidResult>(result.Result);
         }
 
         #endregion
@@ -261,17 +306,15 @@ namespace Projello.Api.Tests.Controllers
             { 
                 ProjectID = 1, 
                 Name = "Project Alpha", 
-                CreatedByUserID = "admin-1", 
+                CreatedByUserID = currentUserId, 
                 Client = new Client { CompanyID = 99, Name = "Test Client" } 
             });
             
-            // They are BOTH already members
             _context.ProjectMembers.Add(new ProjectMember { ProjectID = 1, UserID = currentUserId, AssignedAs = "Foreman" });
             _context.ProjectMembers.Add(new ProjectMember { ProjectID = 1, UserID = targetUserId, AssignedAs = "Worker" });
             await _context.SaveChangesAsync();
 
             var dto = new AddProjectMemberDto { UserID = targetUserId, AssignedAs = "Worker" };
-
             var result = await _controller.AddProjectMember(1, dto);
 
             var actionResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -285,7 +328,6 @@ namespace Projello.Api.Tests.Controllers
             var targetUserId = "worker-1";
             SetCurrentUser(currentUserId, "2"); 
 
-            // Foreman is Company 99, Worker is Company 50
             _userManagerMock.Setup(u => u.FindByIdAsync(currentUserId))
                 .ReturnsAsync(new User { Id = currentUserId, CompanyId = 99 });
             _userManagerMock.Setup(u => u.FindByIdAsync(targetUserId))
@@ -295,14 +337,13 @@ namespace Projello.Api.Tests.Controllers
             { 
                 ProjectID = 1, 
                 Name = "Project Alpha", 
-                CreatedByUserID = "admin-1", 
+                CreatedByUserID = currentUserId, 
                 Client = new Client { CompanyID = 99, Name = "Test Client" } 
             });
             _context.ProjectMembers.Add(new ProjectMember { ProjectID = 1, UserID = currentUserId, AssignedAs = "Foreman" });
             await _context.SaveChangesAsync();
 
             var dto = new AddProjectMemberDto { UserID = targetUserId };
-
             var result = await _controller.AddProjectMember(1, dto);
 
             var actionResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -313,15 +354,13 @@ namespace Projello.Api.Tests.Controllers
         public async Task AddProjectMember_NotForeman_ReturnsForbid()
         {
             var currentUserId = "standard-1";
-            SetCurrentUser(currentUserId, "2"); // Standard user
+            SetCurrentUser(currentUserId, "2"); 
 
-            _context.Projects.Add(new Project { ProjectID = 1, Name = "Project Alpha", CreatedByUserID = "admin-1" });
-            // User is in the project but NOT as a foreman
+            _context.Projects.Add(new Project { ProjectID = 1, Name = "Project Alpha", CreatedByUserID = currentUserId });
             _context.ProjectMembers.Add(new ProjectMember { ProjectID = 1, UserID = currentUserId, AssignedAs = "Worker" });
             await _context.SaveChangesAsync();
 
             var dto = new AddProjectMemberDto { UserID = "some-user" };
-
             var result = await _controller.AddProjectMember(1, dto);
 
             Assert.IsType<ForbidResult>(result);
@@ -335,7 +374,7 @@ namespace Projello.Api.Tests.Controllers
             SetCurrentUser(currentUserId, "2"); 
 
             var client = new Client { CompanyID = 99, Name = "Test Client" };
-            var project = new Project { ProjectID = 1, Name = "Site A", CreatedByUserID = "admin-1", Client = client };
+            var project = new Project { ProjectID = 1, Name = "Site A", CreatedByUserID = currentUserId, Client = client };
             
             _context.Projects.Add(project);
             _context.ProjectMembers.Add(new ProjectMember { ProjectID = 1, UserID = currentUserId, AssignedAs = "Foreman" });
@@ -347,15 +386,76 @@ namespace Projello.Api.Tests.Controllers
                 .ReturnsAsync(new User { Id = targetUserId, CompanyId = 99, FullName = "Worker Joe" });
 
             var dto = new AddProjectMemberDto { UserID = targetUserId, AssignedAs = "Worker" };
-
             var result = await _controller.AddProjectMember(1, dto);
 
             Assert.IsType<OkObjectResult>(result);
 
-            // Verify SignalR notifications sent
             _hubClientsMock.Verify(c => c.User(currentUserId), Times.Once);
             _hubClientsMock.Verify(c => c.User(targetUserId), Times.Once);
             _clientProxyMock.Verify(p => p.SendCoreAsync("WorkerJoinedProject", It.IsAny<object[]>(), default), Times.Exactly(2));
+        }
+
+        #endregion
+
+        #region UpdateProject Tests
+
+        [Fact]
+        public async Task UpdateProject_InvalidId_ReturnsNotFound()
+        {
+            SetCurrentUser("admin-1", "1");
+            var dto = new ProjectUpdateDto { Name = "Updated Name" }; 
+
+            var result = await _controller.UpdateProject(999, dto);
+            Assert.True(result is NotFoundResult || result is NotFoundObjectResult);
+        }
+
+        [Fact]
+        public async Task UpdateProject_CompanyMismatch_ReturnsForbid()
+        {
+            var userId = "owner-1";
+            SetCurrentUser(userId, "4");
+
+            _userManagerMock.Setup(u => u.FindByIdAsync(userId))
+                .ReturnsAsync(new User { Id = userId, CompanyId = 10 });
+
+            // FIX: Added required CreatedByUserID
+            _context.Projects.Add(new Project 
+            { 
+                ProjectID = 1, 
+                Name = "Old Name", 
+                CreatedByUserID = userId,
+                Client = new Client { CompanyID = 99, Name = "Test Client" } 
+            });
+            await _context.SaveChangesAsync();
+
+            var dto = new ProjectUpdateDto { Name = "Updated Name" };
+            var result = await _controller.UpdateProject(1, dto);
+
+            Assert.IsType<ForbidResult>(result);
+        }
+
+        [Fact]
+        public async Task UpdateProject_Success_UpdatesAndReturnsOk()
+        {
+            var userId = "admin-1";
+            SetCurrentUser(userId, "1"); 
+
+            // FIX: Added required CreatedByUserID
+            var project = new Project 
+            { 
+                ProjectID = 1, 
+                Name = "Old Name", 
+                CreatedByUserID = userId,
+                Client = new Client { CompanyID = 10, Name = "Test Client" } 
+            };
+            _context.Projects.Add(project);
+            await _context.SaveChangesAsync();
+
+            var dto = new ProjectUpdateDto { Name = "Brand New Name" };
+            var result = await _controller.UpdateProject(1, dto);
+
+            Assert.True(result is OkResult || result is OkObjectResult || result is NoContentResult);
+            Assert.Equal("Brand New Name", project.Name);
         }
 
         #endregion
@@ -381,13 +481,13 @@ namespace Projello.Api.Tests.Controllers
         {
             SetCurrentUser("user-1", "2");
 
-            _context.Projects.Add(new Project { ProjectID = 1, Name = "Project Alpha", CreatedByUserID = "admin-1" });
+            _context.Projects.Add(new Project { ProjectID = 1, Name = "Project Alpha", CreatedByUserID = "user-1" });
             await _context.SaveChangesAsync();
 
             var result = await _controller.DeleteProject(1);
 
             Assert.IsType<ForbidResult>(result);
-            Assert.Single(_context.Projects); // Ensure it wasn't deleted
+            Assert.Single(_context.Projects); 
         }
 
         #endregion

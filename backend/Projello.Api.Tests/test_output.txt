@@ -7,25 +7,37 @@ VSTest version 18.0.2 (x64)
 
 Starting test execution, please wait...
 A total of 1 test files matched the specified pattern.
-  Failed Projello.Api.Tests.DashboardControllerTests.GetDashboardOverview_NonAdmin_FiltersByMembership [1 s]
-  Error Message:
-   Assert.Single() Failure: The collection was empty
-  Stack Trace:
-     at Projello.Api.Tests.DashboardControllerTests.GetDashboardOverview_NonAdmin_FiltersByMembership() in C:\Users\flr21\Desktop\Projello-Management-System\backend\Projello.Api.Tests\DashboardControllerTests.cs:line 87
---- End of stack trace from previous location ---
-  Failed Projello.Tests.ComponentTests.HistoryTimelineComponent_PublishActivityAndFetchFeed_CompilesUnifiedAuditLog [37 ms]
+  Failed Projello.Api.Tests.TasksControllerTests.GetTasksByProject_ProjectDoesNotExist_ReturnsNotFound [4 ms]
   Error Message:
    Assert.IsType() Failure: Value is not the exact type
-Expected: typeof(Microsoft.AspNetCore.Mvc.ObjectResult)
+Expected: typeof(Microsoft.AspNetCore.Mvc.NotFoundResult)
 Actual:   typeof(Microsoft.AspNetCore.Mvc.OkObjectResult)
   Stack Trace:
-     at Projello.Tests.ComponentTests.HistoryTimelineComponent_PublishActivityAndFetchFeed_CompilesUnifiedAuditLog() in C:\Users\flr21\Desktop\Projello-Management-System\backend\Projello.Api.Tests\ComponentTests.cs:line 126
+     at Projello.Api.Tests.TasksControllerTests.GetTasksByProject_ProjectDoesNotExist_ReturnsNotFound() in C:\Users\flr21\Desktop\Projello-Management-System\backend\Projello.Api.Tests\ControllersTests\TaskControllerTests.cs:line 230
 --- End of stack trace from previous location ---
-  Failed Projello.Api.Tests.DashboardControllerTests.GetDashboardOverview_Admin_ReturnsAggregatedData [75 ms]
+  Failed Projello.Api.Tests.TasksControllerTests.GetMyTasks_UserNotAuthenticated_ReturnsUnauthorized [1 ms]
   Error Message:
-   Assert.NotEmpty() Failure: Collection was empty
+   Assert.IsType() Failure: Value is not the exact type
+Expected: typeof(Microsoft.AspNetCore.Mvc.UnauthorizedResult)
+Actual:   typeof(Microsoft.AspNetCore.Mvc.OkObjectResult)
   Stack Trace:
-     at Projello.Api.Tests.DashboardControllerTests.GetDashboardOverview_Admin_ReturnsAggregatedData() in C:\Users\flr21\Desktop\Projello-Management-System\backend\Projello.Api.Tests\DashboardControllerTests.cs:line 60
+     at Projello.Api.Tests.TasksControllerTests.GetMyTasks_UserNotAuthenticated_ReturnsUnauthorized() in C:\Users\flr21\Desktop\Projello-Management-System\backend\Projello.Api.Tests\ControllersTests\TaskControllerTests.cs:line 251
+--- End of stack trace from previous location ---
+  Failed Projello.Tests.ClientsControllerTests.GetClient_BelongsToDifferentCompany_ReturnsForbid [27 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is not the exact type
+Expected: typeof(Microsoft.AspNetCore.Mvc.ForbidResult)
+Actual:   typeof(Microsoft.AspNetCore.Mvc.OkObjectResult)
+  Stack Trace:
+     at Projello.Tests.ClientsControllerTests.GetClient_BelongsToDifferentCompany_ReturnsForbid() in C:\Users\flr21\Desktop\Projello-Management-System\backend\Projello.Api.Tests\ControllersTests\ClientsControllerTests.cs:line 220
+--- End of stack trace from previous location ---
+  Failed Projello.Tests.ClientsControllerTests.BlacklistClient_ClientDoesNotExist_ReturnsNotFound [1 ms]
+  Error Message:
+   Assert.True() Failure
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Projello.Tests.ClientsControllerTests.BlacklistClient_ClientDoesNotExist_ReturnsNotFound() in C:\Users\flr21\Desktop\Projello-Management-System\backend\Projello.Api.Tests\ControllersTests\ClientsControllerTests.cs:line 270
 --- End of stack trace from previous location ---
 
-Failed!  - Failed:     3, Passed:    60, Skipped:     0, Total:    63, Duration: 5 s - Projello.Api.Tests.dll (net10.0)
+Failed!  - Failed:     4, Passed:    97, Skipped:     0, Total:   101, Duration: 5 s - Projello.Api.Tests.dll (net10.0)
