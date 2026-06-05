@@ -42,7 +42,7 @@ namespace Projello.Api.Tests.Hubs
             // 3. Configure Clients Mock Returns
             _mockClients.Setup(c => c.Users(It.IsAny<IReadOnlyList<string>>())).Returns(_mockClientProxy.Object);
             _mockClients.Setup(c => c.Group(It.IsAny<string>())).Returns(_mockClientProxy.Object);
-            _mockClients.Setup(c => c.GroupExcept(It.IsAny<string>(), It.IsAny<string>())).Returns(_mockClientProxy.Object);
+            _mockClients.Setup(c => c.GroupExcept(It.IsAny<string>(), It.IsAny<IReadOnlyList<string>>())).Returns(_mockClientProxy.Object);
             _mockClients.Setup(c => c.Caller).Returns(_mockCallerProxy.Object);
 
             // 4. Instantiate Hub & Inject Contexts
@@ -109,7 +109,7 @@ namespace Projello.Api.Tests.Hubs
 
             // Satisfy EF Core constraints
             _context.Projects.Add(new Project { ProjectID = projectId, Name = "Hub Project", CreatedByUserID = "admin" });
-            _context.ProjectMembers.Add(new ProjectMember { ProjectID = projectId, UserID = userId });
+            _context.ProjectMembers.Add(new ProjectMember { ProjectID = projectId, UserID = userId, AssignedAs = "Worker" });
             await _context.SaveChangesAsync();
 
             var targets = new[] { "target-1", "target-2" };
@@ -138,7 +138,7 @@ namespace Projello.Api.Tests.Hubs
             SetupHubContext(connectionId, userId);
 
             _context.Projects.Add(new Project { ProjectID = projectId, Name = "Hub Project", CreatedByUserID = "admin" });
-            _context.ProjectMembers.Add(new ProjectMember { ProjectID = projectId, UserID = userId });
+            _context.ProjectMembers.Add(new ProjectMember { ProjectID = projectId, UserID = userId, AssignedAs = "Worker" });
             await _context.SaveChangesAsync();
 
             await _hub.JoinProjectCall(projectId.ToString());
@@ -146,7 +146,7 @@ namespace Projello.Api.Tests.Hubs
             var expectedGroup = $"project-call:{projectId}";
 
             _mockGroups.Verify(g => g.AddToGroupAsync(connectionId, expectedGroup, default), Times.Once);
-            _mockClients.Verify(c => c.GroupExcept(expectedGroup, connectionId), Times.Once);
+            _mockClients.Verify(c => c.GroupExcept(expectedGroup, It.Is<IReadOnlyList<string>>(l => l.Contains(connectionId))), Times.Once);
             _mockCallerProxy.Verify(p => p.SendCoreAsync("JoinedProjectCall", It.IsAny<object[]>(), default), Times.Once);
         }
 
@@ -206,7 +206,7 @@ namespace Projello.Api.Tests.Hubs
             SetupHubContext("conn-1", userId);
 
             _context.Projects.Add(new Project { ProjectID = projectId, Name = "Hub Project", CreatedByUserID = "admin" });
-            _context.ProjectMembers.Add(new ProjectMember { ProjectID = projectId, UserID = userId });
+            _context.ProjectMembers.Add(new ProjectMember { ProjectID = projectId, UserID = userId, AssignedAs = "Worker" });
             await _context.SaveChangesAsync();
 
             // First, join to populate the static dictionary

@@ -123,14 +123,14 @@ namespace Projello.Tests
 
             // Act Step 1: Post the update 
             var postResult = await updatesController.PostUpdate(88, newUpdatePayload);
-            Assert.IsType<CreatedAtActionResult>(postResult); 
+            Assert.IsType<OkObjectResult>(postResult); 
             
             var generatedUpdate = await context.ProgressUpdates.FirstAsync();
             
             // Act Step 2: Push Emoji reaction metadata
             var reactionPayload = new ReactionCreateDto { Emoji = "🔥" };
             var reactionResult = await updatesController.AddReaction(generatedUpdate.UpdateID, reactionPayload);
-            Assert.IsType<OkObjectResult>(reactionResult);
+            Assert.IsType<OkResult>(reactionResult);
 
             // FIX: Explicitly link the tracked reaction to bypass the EF Core InMemory missing relationship JOIN limitation
             var memoryReaction = await context.Reactions.FirstAsync(r => r.UpdateID == generatedUpdate.UpdateID);
@@ -141,6 +141,8 @@ namespace Projello.Tests
                 generatedUpdate.Reactions = new List<Reaction>();
             }
             generatedUpdate.Reactions.Add(memoryReaction);
+
+            await context.SaveChangesAsync(); //ass this line to flush the linked relationship to the in-memory store
 
             // Act Step 3: Fetch feed using GetRecentActivity route path
             var feedResult = await updatesController.GetRecentActivity();

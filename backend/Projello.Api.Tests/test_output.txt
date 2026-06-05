@@ -1,0 +1,31 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Projello.Api -> C:\Users\flr21\Desktop\Projello-Management-System\backend\Projello.Api\bin\Debug\net10.0\Projello.Api.dll
+  Projello.Api.Tests -> C:\Users\flr21\Desktop\Projello-Management-System\backend\Projello.Api.Tests\bin\Debug\net10.0\Projello.Api.Tests.dll
+Test run for C:\Users\flr21\Desktop\Projello-Management-System\backend\Projello.Api.Tests\bin\Debug\net10.0\Projello.Api.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+  Failed Projello.Api.Tests.DashboardControllerTests.GetDashboardOverview_NonAdmin_FiltersByMembership [1 s]
+  Error Message:
+   Assert.Single() Failure: The collection was empty
+  Stack Trace:
+     at Projello.Api.Tests.DashboardControllerTests.GetDashboardOverview_NonAdmin_FiltersByMembership() in C:\Users\flr21\Desktop\Projello-Management-System\backend\Projello.Api.Tests\DashboardControllerTests.cs:line 87
+--- End of stack trace from previous location ---
+  Failed Projello.Tests.ComponentTests.HistoryTimelineComponent_PublishActivityAndFetchFeed_CompilesUnifiedAuditLog [37 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is not the exact type
+Expected: typeof(Microsoft.AspNetCore.Mvc.ObjectResult)
+Actual:   typeof(Microsoft.AspNetCore.Mvc.OkObjectResult)
+  Stack Trace:
+     at Projello.Tests.ComponentTests.HistoryTimelineComponent_PublishActivityAndFetchFeed_CompilesUnifiedAuditLog() in C:\Users\flr21\Desktop\Projello-Management-System\backend\Projello.Api.Tests\ComponentTests.cs:line 126
+--- End of stack trace from previous location ---
+  Failed Projello.Api.Tests.DashboardControllerTests.GetDashboardOverview_Admin_ReturnsAggregatedData [75 ms]
+  Error Message:
+   Assert.NotEmpty() Failure: Collection was empty
+  Stack Trace:
+     at Projello.Api.Tests.DashboardControllerTests.GetDashboardOverview_Admin_ReturnsAggregatedData() in C:\Users\flr21\Desktop\Projello-Management-System\backend\Projello.Api.Tests\DashboardControllerTests.cs:line 60
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     3, Passed:    60, Skipped:     0, Total:    63, Duration: 5 s - Projello.Api.Tests.dll (net10.0)

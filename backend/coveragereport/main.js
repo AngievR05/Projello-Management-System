@@ -294,16 +294,16 @@ var assemblies = [
       { "name": "Program", "rp": "Projello.Api_Program.html", "cl": 108, "ucl": 25, "cal": 133, "tl": 167, "cb": 3, "tb": 14, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Controllers.AuthController", "rp": "Projello.Api_AuthController.html", "cl": 127, "ucl": 133, "cal": 260, "tl": 436, "cb": 28, "tb": 94, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Controllers.ClientsController", "rp": "Projello.Api_ClientsController.html", "cl": 84, "ucl": 41, "cal": 125, "tl": 214, "cb": 28, "tb": 88, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Projello.Api.Controllers.DashboardController", "rp": "Projello.Api_DashboardController.html", "cl": 88, "ucl": 34, "cal": 122, "tl": 201, "cb": 5, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Projello.Api.Controllers.DashboardController", "rp": "Projello.Api_DashboardController.html", "cl": 100, "ucl": 22, "cal": 122, "tl": 201, "cb": 9, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Controllers.MilestonesController", "rp": "Projello.Api_MilestonesController.html", "cl": 80, "ucl": 7, "cal": 87, "tl": 150, "cb": 19, "tb": 32, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Projello.Api.Controllers.ProjectsController", "rp": "Projello.Api_ProjectsController.html", "cl": 83, "ucl": 145, "cal": 228, "tl": 385, "cb": 21, "tb": 130, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Projello.Api.Controllers.ProjectsController", "rp": "Projello.Api_ProjectsController.html", "cl": 143, "ucl": 85, "cal": 228, "tl": 385, "cb": 57, "tb": 130, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Controllers.SiteUpdatesController", "rp": "Projello.Api_SiteUpdatesController.html", "cl": 120, "ucl": 10, "cal": 130, "tl": 191, "cb": 18, "tb": 22, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Controllers.TasksController", "rp": "Projello.Api_TasksController.html", "cl": 73, "ucl": 61, "cal": 134, "tl": 227, "cb": 14, "tb": 56, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Projello.Api.Controllers.UpdatesController", "rp": "Projello.Api_UpdatesController.html", "cl": 30, "ucl": 49, "cal": 79, "tl": 138, "cb": 4, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Projello.Api.Controllers.UpdatesController", "rp": "Projello.Api_UpdatesController.html", "cl": 79, "ucl": 0, "cal": 79, "tl": 138, "cb": 7, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Controllers.UsersController", "rp": "Projello.Api_UsersController.html", "cl": 41, "ucl": 81, "cal": 122, "tl": 205, "cb": 17, "tb": 60, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Controllers.WebRtcController", "rp": "Projello.Api_WebRtcController.html", "cl": 17, "ucl": 0, "cal": 17, "tl": 48, "cb": 3, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Data.AppDbContext", "rp": "Projello.Api_AppDbContext.html", "cl": 35, "ucl": 0, "cal": 35, "tl": 64, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Projello.Api.DTOs.AddProjectMemberDto", "rp": "Projello.Api_AddProjectMemberDto.html", "cl": 1, "ucl": 1, "cal": 2, "tl": 7, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Projello.Api.DTOs.AddProjectMemberDto", "rp": "Projello.Api_AddProjectMemberDto.html", "cl": 2, "ucl": 0, "cal": 2, "tl": 7, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.BlacklistClientDto", "rp": "Projello.Api_BlacklistClientDto.html", "cl": 1, "ucl": 0, "cal": 1, "tl": 8, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.ChangePasswordDto", "rp": "Projello.Api_ChangePasswordDto.html", "cl": 0, "ucl": 2, "cal": 2, "tl": 8, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.ClientBlacklistStatusDto", "rp": "Projello.Api_ClientBlacklistStatusDto.html", "cl": 6, "ucl": 0, "cal": 6, "tl": 16, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -315,7 +315,7 @@ var assemblies = [
       { "name": "Projello.Api.DTOs.DashboardMilestoneDto", "rp": "Projello.Api_DashboardMilestoneDto.html", "cl": 0, "ucl": 6, "cal": 6, "tl": 54, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.DashboardOverviewDto", "rp": "Projello.Api_DashboardOverviewDto.html", "cl": 4, "ucl": 0, "cal": 4, "tl": 54, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.DashboardPreferencesDto", "rp": "Projello.Api_DashboardPreferencesDto.html", "cl": 0, "ucl": 3, "cal": 3, "tl": 54, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Projello.Api.DTOs.DashboardProjectDto", "rp": "Projello.Api_DashboardProjectDto.html", "cl": 0, "ucl": 7, "cal": 7, "tl": 54, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Projello.Api.DTOs.DashboardProjectDto", "rp": "Projello.Api_DashboardProjectDto.html", "cl": 7, "ucl": 0, "cal": 7, "tl": 54, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.DashboardTaskDto", "rp": "Projello.Api_DashboardTaskDto.html", "cl": 0, "ucl": 7, "cal": 7, "tl": 54, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.MilestoneCreateDto", "rp": "Projello.Api_MilestoneCreateDto.html", "cl": 5, "ucl": 0, "cal": 5, "tl": 21, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.MilestoneReadDto", "rp": "Projello.Api_MilestoneReadDto.html", "cl": 9, "ucl": 0, "cal": 9, "tl": 16, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -329,14 +329,14 @@ var assemblies = [
       { "name": "Projello.Api.DTOs.ProjectReadDto", "rp": "Projello.Api_ProjectReadDto.html", "cl": 10, "ucl": 0, "cal": 10, "tl": 20, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.ProjectStatusUpdateDto", "rp": "Projello.Api_ProjectStatusUpdateDto.html", "cl": 0, "ucl": 1, "cal": 1, "tl": 7, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.ProjectUpdateDto", "rp": "Projello.Api_ProjectUpdateDto.html", "cl": 0, "ucl": 5, "cal": 5, "tl": 21, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Projello.Api.DTOs.ReactionCreateDto", "rp": "Projello.Api_ReactionCreateDto.html", "cl": 0, "ucl": 1, "cal": 1, "tl": 10, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Projello.Api.DTOs.ReactionReadDto", "rp": "Projello.Api_ReactionReadDto.html", "cl": 0, "ucl": 2, "cal": 2, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Projello.Api.DTOs.ReactionCreateDto", "rp": "Projello.Api_ReactionCreateDto.html", "cl": 1, "ucl": 0, "cal": 1, "tl": 10, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Projello.Api.DTOs.ReactionReadDto", "rp": "Projello.Api_ReactionReadDto.html", "cl": 2, "ucl": 0, "cal": 2, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.Setup2FaDto", "rp": "Projello.Api_Setup2FaDto.html", "cl": 1, "ucl": 0, "cal": 1, "tl": 10, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.TaskCreateDto", "rp": "Projello.Api_TaskCreateDto.html", "cl": 6, "ucl": 0, "cal": 6, "tl": 22, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.TaskReadDto", "rp": "Projello.Api_TaskReadDto.html", "cl": 11, "ucl": 0, "cal": 11, "tl": 17, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.TaskStatusUpdateDto", "rp": "Projello.Api_TaskStatusUpdateDto.html", "cl": 0, "ucl": 1, "cal": 1, "tl": 8, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.TaskUpdateDto", "rp": "Projello.Api_TaskUpdateDto.html", "cl": 0, "ucl": 5, "cal": 5, "tl": 22, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Projello.Api.DTOs.UpdateReadDto", "rp": "Projello.Api_UpdateReadDto.html", "cl": 0, "ucl": 7, "cal": 7, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Projello.Api.DTOs.UpdateReadDto", "rp": "Projello.Api_UpdateReadDto.html", "cl": 7, "ucl": 0, "cal": 7, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.UserDisplayDto", "rp": "Projello.Api_UserDisplayDto.html", "cl": 5, "ucl": 0, "cal": 5, "tl": 11, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.UserLoginDto", "rp": "Projello.Api_UserLoginDto.html", "cl": 2, "ucl": 0, "cal": 2, "tl": 14, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.UserProfileDto", "rp": "Projello.Api_UserProfileDto.html", "cl": 0, "ucl": 8, "cal": 8, "tl": 36, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -348,7 +348,7 @@ var assemblies = [
       { "name": "Projello.Api.DTOs.UserUpdateDto", "rp": "Projello.Api_UserUpdateDto.html", "cl": 0, "ucl": 4, "cal": 4, "tl": 11, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.UserWorkloadDto", "rp": "Projello.Api_UserWorkloadDto.html", "cl": 0, "ucl": 3, "cal": 3, "tl": 36, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.DTOs.Verify2FaDto", "rp": "Projello.Api_Verify2FaDto.html", "cl": 2, "ucl": 0, "cal": 2, "tl": 13, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Projello.Api.Hubs.ProjectCallHub", "rp": "Projello.Api_ProjectCallHub.html", "cl": 0, "ucl": 96, "cal": 96, "tl": 152, "cb": 0, "tb": 38, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Projello.Api.Hubs.ProjectCallHub", "rp": "Projello.Api_ProjectCallHub.html", "cl": 81, "ucl": 15, "cal": 96, "tl": 152, "cb": 22, "tb": 38, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Migrations.Add2FAFieldsToUser", "rp": "Projello.Api_Add2FAFieldsToUser.html", "cl": 0, "ucl": 736, "cal": 736, "tl": 810, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Migrations.AddAvatarFieldsToUser", "rp": "Projello.Api_AddAvatarFieldsToUser.html", "cl": 0, "ucl": 783, "cal": 783, "tl": 858, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Migrations.AddClientBlacklistFields", "rp": "Projello.Api_AddClientBlacklistFields.html", "cl": 0, "ucl": 799, "cal": 799, "tl": 881, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -372,7 +372,7 @@ var assemblies = [
       { "name": "Projello.Api.Models.ProjectMember", "rp": "Projello.Api_ProjectMember.html", "cl": 5, "ucl": 1, "cal": 6, "tl": 18, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Models.ProjectUpdate", "rp": "Projello.Api_ProjectUpdate.html", "cl": 6, "ucl": 0, "cal": 6, "tl": 18, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Models.ReactDto", "rp": "Projello.Api_ReactDto.html", "cl": 1, "ucl": 0, "cal": 1, "tl": 17, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Projello.Api.Models.Reaction", "rp": "Projello.Api_Reaction.html", "cl": 0, "ucl": 7, "cal": 7, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Projello.Api.Models.Reaction", "rp": "Projello.Api_Reaction.html", "cl": 6, "ucl": 1, "cal": 7, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Models.TaskItem", "rp": "Projello.Api_TaskItem.html", "cl": 12, "ucl": 0, "cal": 12, "tl": 41, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Models.UpdateComment", "rp": "Projello.Api_UpdateComment.html", "cl": 5, "ucl": 0, "cal": 5, "tl": 14, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Projello.Api.Models.UpdateReaction", "rp": "Projello.Api_UpdateReaction.html", "cl": 5, "ucl": 0, "cal": 5, "tl": 14, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -394,22 +394,10 @@ var riskHotspotMetrics = [
 
 var riskHotspots = [
   {
-    "assembly": "Projello.Api", "class": "Projello.Api.Controllers.ProjectsController", "reportPath": "Projello.Api_ProjectsController.html", "methodName": "GetProject()", "methodShortName": "GetProject()", "fileIndex": 0, "line": 76,
-    "metrics": [
-      { "value": 514, "exceeded": true },
-      { "value": 32, "exceeded": true },
-    ]},
-  {
     "assembly": "Projello.Api", "class": "Projello.Api.Controllers.ClientsController", "reportPath": "Projello.Api_ClientsController.html", "methodName": "GetClient()", "methodShortName": "GetClient()", "fileIndex": 0, "line": 61,
     "metrics": [
       { "value": 506, "exceeded": true },
       { "value": 22, "exceeded": true },
-    ]},
-  {
-    "assembly": "Projello.Api", "class": "Projello.Api.Controllers.ProjectsController", "reportPath": "Projello.Api_ProjectsController.html", "methodName": "AddProjectMember()", "methodShortName": "AddProjectMember()", "fileIndex": 0, "line": 261,
-    "metrics": [
-      { "value": 442, "exceeded": true },
-      { "value": 30, "exceeded": true },
     ]},
   {
     "assembly": "Projello.Api", "class": "Projello.Api.Controllers.ProjectsController", "reportPath": "Projello.Api_ProjectsController.html", "methodName": "UpdateProject()", "methodShortName": "UpdateProject()", "fileIndex": 0, "line": 170,
@@ -418,16 +406,16 @@ var riskHotspots = [
       { "value": 20, "exceeded": true },
     ]},
   {
-    "assembly": "Projello.Api", "class": "Projello.Api.Hubs.ProjectCallHub", "reportPath": "Projello.Api_ProjectCallHub.html", "methodName": "RingUsers()", "methodShortName": "RingUsers()", "fileIndex": 0, "line": 23,
-    "metrics": [
-      { "value": 272, "exceeded": true },
-      { "value": 16, "exceeded": true },
-    ]},
-  {
     "assembly": "Projello.Api", "class": "Projello.Api.Controllers.ClientsController", "reportPath": "Projello.Api_ClientsController.html", "methodName": "RemoveFromBlacklist()", "methodShortName": "RemoveFromBlacklist()", "fileIndex": 0, "line": 151,
     "metrics": [
       { "value": 210, "exceeded": true },
       { "value": 14, "exceeded": false },
+    ]},
+  {
+    "assembly": "Projello.Api", "class": "Projello.Api.Controllers.ProjectsController", "reportPath": "Projello.Api_ProjectsController.html", "methodName": "GetProject()", "methodShortName": "GetProject()", "fileIndex": 0, "line": 76,
+    "metrics": [
+      { "value": 208, "exceeded": true },
+      { "value": 32, "exceeded": true },
     ]},
   {
     "assembly": "Projello.Api", "class": "Projello.Api.Controllers.TasksController", "reportPath": "Projello.Api_TasksController.html", "methodName": "UpdateTaskStatus()", "methodShortName": "UpdateTaskStatus()", "fileIndex": 0, "line": 157,
@@ -478,12 +466,6 @@ var riskHotspots = [
       { "value": 8, "exceeded": false },
     ]},
   {
-    "assembly": "Projello.Api", "class": "Projello.Api.Hubs.ProjectCallHub", "reportPath": "Projello.Api_ProjectCallHub.html", "methodName": "OnDisconnectedAsync()", "methodShortName": "OnDisconnectedAsync()", "fileIndex": 0, "line": 133,
-    "metrics": [
-      { "value": 72, "exceeded": true },
-      { "value": 8, "exceeded": false },
-    ]},
-  {
     "assembly": "Projello.Api", "class": "Projello.Api.Controllers.AuthController", "reportPath": "Projello.Api_AuthController.html", "methodName": "ChangePassword()", "methodShortName": "ChangePassword()", "fileIndex": 0, "line": 154,
     "metrics": [
       { "value": 42, "exceeded": true },
@@ -514,16 +496,22 @@ var riskHotspots = [
       { "value": 6, "exceeded": false },
     ]},
   {
-    "assembly": "Projello.Api", "class": "Projello.Api.Hubs.ProjectCallHub", "reportPath": "Projello.Api_ProjectCallHub.html", "methodName": "JoinProjectCall()", "methodShortName": "JoinProjectCall()", "fileIndex": 0, "line": 45,
-    "metrics": [
-      { "value": 42, "exceeded": true },
-      { "value": 6, "exceeded": false },
-    ]},
-  {
     "assembly": "Projello.Api", "class": "Projello.Api.Controllers.AuthController", "reportPath": "Projello.Api_AuthController.html", "methodName": "Verify2FA()", "methodShortName": "Verify2FA()", "fileIndex": 0, "line": 228,
     "metrics": [
       { "value": 41, "exceeded": true },
       { "value": 24, "exceeded": true },
+    ]},
+  {
+    "assembly": "Projello.Api", "class": "Projello.Api.Controllers.ProjectsController", "reportPath": "Projello.Api_ProjectsController.html", "methodName": "AddProjectMember()", "methodShortName": "AddProjectMember()", "fileIndex": 0, "line": 261,
+    "metrics": [
+      { "value": 30, "exceeded": false },
+      { "value": 30, "exceeded": true },
+    ]},
+  {
+    "assembly": "Projello.Api", "class": "Projello.Api.Hubs.ProjectCallHub", "reportPath": "Projello.Api_ProjectCallHub.html", "methodName": "RingUsers()", "methodShortName": "RingUsers()", "fileIndex": 0, "line": 23,
+    "metrics": [
+      { "value": 16, "exceeded": false },
+      { "value": 16, "exceeded": true },
     ]},
 ];
 

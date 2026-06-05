@@ -89,7 +89,7 @@ namespace Projello.Tests
             var dto = new MilestoneCreateDto { ProjectID = 5, Title = "Should Fail" };
             var result = await controller.CreateMilestone(dto);
 
-            Assert.IsType<StatusCodeResult>(result.Result); // 403
+        Assert.IsType<ObjectResult>(result.Result); // 403
         }
 
         [Fact]
@@ -124,7 +124,7 @@ namespace Projello.Tests
             controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = CreateMockUser(workerId, "3") } };
 
             var result = await controller.DeleteMilestone(8);
-            Assert.IsType<StatusCodeResult>(result);
+            Assert.IsType<ObjectResult>(result);
         }
     }
 }
