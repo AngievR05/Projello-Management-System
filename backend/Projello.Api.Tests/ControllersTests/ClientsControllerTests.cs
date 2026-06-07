@@ -337,5 +337,81 @@ namespace Projello.Api.Tests
             var result = await controller.RemoveFromBlacklist(71);
             Assert.IsType<BadRequestObjectResult>(result);
         }
+
+        [Fact]
+        public async Task UpdateClient_UserBelongsToDifferentCompany_ReturnsForbid()
+        {
+            var context = GetInMemoryDbContext();
+            // Seed client belonging to Company 2
+            context.Clients.Add(new Client { ClientID = 72, Name = "Company 2 Client", CompanyID = 2 });
+            
+            // User belongs to Company 1
+            var userId = "user-company-1";
+            context.Users.Add(new User { Id = userId, CompanyId = 1 });
+            context.SaveChanges();
+
+            var userManager = GetMockUserManager(context);
+            var controller = new ClientsController(context, userManager);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateMockUser(userId, "3") } // Regular user
+            };
+
+            var dto = new ClientUpdateDto();
+            var result = await controller.UpdateClient(72, dto);
+
+            Assert.IsType<ForbidResult>(result);
+        }
+
+        [Fact]
+        public async Task UpdateClient_ValidWorkerUpdatesOwnCompanyClient_ReturnsNoContent()
+        {
+            var context = GetInMemoryDbContext();
+            // Seed client belonging to Company 1
+            context.Clients.Add(new Client { ClientID = 73, Name = "Company 1 Client", CompanyID = 1 });
+            
+            // User belongs to Company 1
+            var userId = "user-company-1";
+            context.Users.Add(new User { Id = userId, CompanyId = 1 });
+            context.SaveChanges();
+
+            var userManager = GetMockUserManager(context);
+            var controller = new ClientsController(context, userManager);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateMockUser(userId, "3") } // Regular user
+            };
+
+            var dto = new ClientUpdateDto();
+            var result = await controller.UpdateClient(73, dto);
+
+            Assert.IsType<NoContentResult>(result);
+        }
+
+        [Fact]
+        public async Task RemoveFromBlacklist_ValidAdmin_SuccessfullyRemovesFromBlacklist()
+        {
+            var context = GetInMemoryDbContext();
+            // Seed a client that IS currently blacklisted
+            context.Clients.Add(new Client { ClientID = 74, Name = "Blacklisted Client", IsBlacklisted = true, BlacklistedAt = DateTime.UtcNow });
+            context.SaveChanges();
+
+            var userManager = GetMockUserManager(context);
+            var controller = new ClientsController(context, userManager);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateMockUser("admin-id", "1") } // Admin
+            };
+
+            var result = await controller.RemoveFromBlacklist(74);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+
+            // Verify database state updated successfully
+            var updatedClient = context.Clients.Find(74);
+            Assert.False(updatedClient!.IsBlacklisted);
+            Assert.Null(updatedClient.BlacklistedAt);
+        }
+
+        
     }
 }

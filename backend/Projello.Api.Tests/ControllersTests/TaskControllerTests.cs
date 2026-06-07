@@ -539,5 +539,37 @@ namespace Projello.Api.Tests
             
             Assert.IsType<BadRequestObjectResult>(result);
         }
+
+        [Fact]
+        public async Task UpdateTaskStatus_ValidStatusTransition_ReturnsNoContent()
+        {
+            var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<AppDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+            using var context = new AppDbContext(options);
+
+            context.Milestones.Add(new Milestone { MilestoneID = 70, ProjectID = 7, Title = "Sprint 5" });
+            conext.Tasks.Add(new TaskItem
+            {
+                TaskID = 601,
+                MilestoneID = 61, 
+                Title = "Updatable Task",
+                Status = Status.NotStarted,
+                Priority = "Low"
+            });
+            context.SaveChanges();
+
+            var controller = new TasksController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateControllerContext("admin-id", "1").HttpContext.User }
+            };
+
+            // Act
+            var statusDto = new TaskStatusUpdateDto { Status = "In Progress" };
+            var result = await controller.UpdateTaskStatus(601, statusDto);
+
+            // Assert
+            Assert.IsType<NoContentResult>(result);
+        }
     }
 }
