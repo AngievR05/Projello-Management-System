@@ -301,5 +301,41 @@ namespace Projello.Api.Tests
             Assert.Equal(1, doc.RootElement.GetArrayLength());
             Assert.Equal(1, doc.RootElement[0].GetProperty("clientID").GetInt32());
         }
+
+        [Fact]
+        public async Task UpdateClient_ClientDoesNotExist_ReturnsNotFound()
+        {
+            var context = GetInMemoryDbContext();
+            var userManager = GetMockUserManager(context);
+            var controller = new ClientsController(context, userManager);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateMockUser("admin-id", "1") }
+            };
+
+            var dto = new ClientUpdateDto(); // Empty instance avoids property name issues completely
+            var result = await controller.UpdateClient(99999, dto);
+
+            Assert.IsType<NotFoundObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task RemoveFromBlacklist_ClientNotBlacklisted_ReturnsBadRequest()
+        {
+            var context = GetInMemoryDbContext();
+            // Seed a standard client that is NOT blacklisted
+            context.Clients.Add(new Client { ClientID = 71, Name = "Good Standing Client", IsBlacklisted = false });
+            context.SaveChanges();
+
+            var userManager = GetMockUserManager(context);
+            var controller = new ClientsController(context, userManager);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateMockUser("admin-id", "1") }
+            };
+
+            var result = await controller.RemoveFromBlacklist(71);
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
     }
 }

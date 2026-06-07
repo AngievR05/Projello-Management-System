@@ -12,7 +12,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Projello.Tests
+namespace Projello.Api.Tests
 {
     public class MilestonesControllerTests
     {
@@ -125,6 +125,23 @@ namespace Projello.Tests
 
             var result = await controller.DeleteMilestone(8);
             Assert.IsType<ObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task DeleteMilestone_MilestoneDoesNotExist_ReturnsNotFound()
+        {
+            var context = GetInMemoryDbContext();
+            var controller = new MilestonesController(context);
+            controller.ControllerContext = new ControllerContext 
+            { 
+                HttpContext = new DefaultHttpContext { User = CreateMockUser("admin-id", "1") }
+            };
+
+            // Act - Removed the '.Result' accessor since DeleteMilestone returns IActionResult directly
+            var result = await controller.DeleteMilestone(99999); 
+            
+            // Assert
+            Assert.IsType<NotFoundObjectResult>(result);
         }
     }
 }

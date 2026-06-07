@@ -508,5 +508,36 @@ namespace Projello.Api.Tests
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
+
+        [Fact]
+        public async Task UpdateTaskStatus_InvalidStatusTransition_ReturnsBadRequest()
+        {
+            var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<AppDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+            using var context = new AppDbContext(options);
+
+            context.Milestones.Add(new Milestone { MilestoneID = 60, ProjectID = 6, Title = "Sprint 4" });
+            context.Tasks.Add(new TaskItem 
+            { 
+                TaskID = 600, 
+                MilestoneID = 60, 
+                Title = "Immutable Task", 
+                Status = Status.NotStarted, 
+                Priority = "Low" 
+            });
+            context.SaveChanges();
+
+            var controller = new TasksController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateControllerContext("admin-id", "1").HttpContext.User }
+            };
+
+            // FIX: Wrapping the status string value cleanly inside the expected DTO class structure
+            var statusDto = new TaskStatusUpdateDto { Status = "ThisIsAnInvalidStatusString" };
+            var result = await controller.UpdateTaskStatus(600, statusDto);
+            
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
     }
 }
