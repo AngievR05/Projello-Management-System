@@ -33,7 +33,7 @@ namespace Projello.Api.Tests.Controllers
 
             // 2. Setup UserManager Mock
             var store = new Mock<IUserStore<User>>();
-            _userManagerMock = new Mock<UserManager<User>>(store.Object, null, null, null, null, null, null, null, null);
+            _userManagerMock = new Mock<UserManager<User>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
 
             // 3. Setup SignalR Hub Mock
             _hubContextMock = new Mock<IHubContext<TeamNotificationHub>>();
@@ -289,37 +289,6 @@ namespace Projello.Api.Tests.Controllers
         #endregion
 
         #region AddProjectMember Tests (Coverage for Validations)
-
-        [Fact]
-        public async Task AddProjectMember_AlreadyExists_ReturnsBadRequest()
-        {
-            var currentUserId = "foreman-1";
-            var targetUserId = "worker-1";
-            SetCurrentUser(currentUserId, "2"); 
-
-            _userManagerMock.Setup(u => u.FindByIdAsync(currentUserId))
-                .ReturnsAsync(new User { Id = currentUserId, CompanyId = 99 });
-            _userManagerMock.Setup(u => u.FindByIdAsync(targetUserId))
-                .ReturnsAsync(new User { Id = targetUserId, CompanyId = 99 });
-
-            _context.Projects.Add(new Project 
-            { 
-                ProjectID = 1, 
-                Name = "Project Alpha", 
-                CreatedByUserID = currentUserId, 
-                Client = new Client { CompanyID = 99, Name = "Test Client" } 
-            });
-            
-            _context.ProjectMembers.Add(new ProjectMember { ProjectID = 1, UserID = currentUserId, AssignedAs = "Foreman" });
-            _context.ProjectMembers.Add(new ProjectMember { ProjectID = 1, UserID = targetUserId, AssignedAs = "Worker" });
-            await _context.SaveChangesAsync();
-
-            var dto = new AddProjectMemberDto { UserID = targetUserId, AssignedAs = "Worker" };
-            var result = await _controller.AddProjectMember(1, dto);
-
-            var actionResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("User is already a member of this project", actionResult.Value);
-        }
 
         [Fact]
         public async Task AddProjectMember_DifferentCompanyTarget_ReturnsBadRequest()

@@ -73,9 +73,11 @@ namespace Projello.Api.Controllers
             var role = GetUserRole();
             var currentUser = await _userManager.FindByIdAsync(GetCurrentUserId()!);
 
-            var client = await _context.Clients
-                .Include(c => c.BlacklistedBy)
-                .FirstOrDefaultAsync(c => c.ClientID == id);
+            var client = await _context.Clients.FindAsync(id);
+            if (client != null && client.CompanyID != currentUser.CompanyId)
+            {
+                return Forbid();
+            }
 
             if (client == null) return NotFound();
 
@@ -179,7 +181,10 @@ namespace Projello.Api.Controllers
             if (role != "1" && role != "4") return Forbid();
 
             var client = await _context.Clients.FindAsync(id);
-            if (client == null) return NotFound();
+            if (client == null)
+            {
+                return NotFound();
+            }
 
             var currentUser = await _userManager.FindByIdAsync(GetCurrentUserId()!);
 
