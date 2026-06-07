@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Projello.Api.DTOs
 {
+    [ExcludeFromCodeCoverage]
     public class TaskReadDto
     {
         public int TaskID { get; set; }

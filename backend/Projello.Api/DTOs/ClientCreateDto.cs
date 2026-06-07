@@ -1,7 +1,8 @@
+namespace Projello.Api.DTOs;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
-namespace Projello.Api.DTOs
-{
+    [ExcludeFromCodeCoverage]
     public class ClientCreateDto
     {
         [Required(ErrorMessage = "Client name is required.")]
@@ -23,4 +24,3 @@ namespace Projello.Api.DTOs
         [MaxLength(255)]
         public string? Notes { get; set; }
     }
-}

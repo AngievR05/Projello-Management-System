@@ -1,9 +1,9 @@
-using System;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Projello.Api.DTOs
 {
     // High-performance payload for the initial load
+    [ExcludeFromCodeCoverage]
     public class DashboardOverviewDto
     {
         public List<DashboardProjectDto> ActiveProjects { get; set; } = new();

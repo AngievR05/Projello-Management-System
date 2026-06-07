@@ -1,7 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
 using System.ComponentModel.DataAnnotations;
 
-namespace Projello.Api.DTOs;
 
+namespace Projello.Api.DTOs;
+[ExcludeFromCodeCoverage]
 public class CreateTaskDto
 {
     [Required]

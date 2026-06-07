@@ -1,7 +1,9 @@
+namespace Projello.Api.DTOs;
+using System.Diagnostics.CodeAnalysis;
 using System.ComponentModel.DataAnnotations;
 
-namespace Projello.Api.DTOs;
 
+[ExcludeFromCodeCoverage]
 public class CreateClientDto
 {
     [Required]

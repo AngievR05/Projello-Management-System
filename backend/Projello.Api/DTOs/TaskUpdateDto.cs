@@ -1,8 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using Projello.Api.Models;
+using System.Diagnostics.CodeAnalysis;
+
 
 namespace Projello.Api.DTOs
 {
+    [ExcludeFromCodeCoverage]
     public class TaskUpdateDto
     {
         [Required(ErrorMessage = "Task title is required")]
