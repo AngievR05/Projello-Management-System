@@ -61,9 +61,7 @@ namespace Projello.Api.Tests
                 ProjectID = 1,
                 Name = "Project A",
                 ClientID = 1,
-                Status = "Planning",
-                CreatedAt = DateTime.UtcNow,
-                CreatedByUserID = "user-1"
+                CreatedByUserID = "user-1" // Added required field
             });
 
             context.Milestones.Add(new Milestone
@@ -100,14 +98,11 @@ namespace Projello.Api.Tests
 
             await context.SaveChangesAsync();
 
-            // Create a mocked UserManager that will return the seeded admin user
             var storeMock = new Mock<IUserStore<User>>();
             var userManagerMock = new Mock<UserManager<User>>(
                 storeMock.Object, null!, null!, null!, null!, null!, null!, null!, null!);
 
-            // Ensure FindByIdAsync returns the seeded user and UpdateAsync succeeds
             userManagerMock.Setup(m => m.FindByIdAsync("user-1")).ReturnsAsync(seededUser);
-            userManagerMock.Setup(m => m.UpdateAsync(It.IsAny<User>())).ReturnsAsync(IdentityResult.Success);
 
             var controller = new TasksController(context)
             {
@@ -117,18 +112,19 @@ namespace Projello.Api.Tests
             var result = await controller.GetMyTasks();
 
             var ok = Assert.IsType<OkObjectResult>(result.Result);
-            var items = Assert.IsAssignableFrom<IEnumerable<object>>(ok.Value); // TaskReadDto exists project; use that type if available
+            
+            // Fixed: Safely cast to TaskReadDto list
+            var items = Assert.IsAssignableFrom<IEnumerable<TaskReadDto>>(ok.Value).ToList(); 
 
             Assert.Single(items);
-            // If you have TaskReadDto accessible, replace the assertions below to cast and inspect Title
+            Assert.Equal("Mine", items[0].Title);
         }
 
-       [Fact]
+        [Fact]
         public async Task GetTasksForProject_ReturnsTasksForProject()
         {
             using var context = CreateContext();
 
-            // Seed minimal data
             var seededUser = new User
             {
                 Id = "user-1",
@@ -143,8 +139,6 @@ namespace Projello.Api.Tests
                 ProjectID = 1,
                 Name = "Project A",
                 ClientID = 1,
-                Status = "Planning",
-                CreatedAt = DateTime.UtcNow,
                 CreatedByUserID = "user-1"
             });
 
@@ -152,43 +146,15 @@ namespace Projello.Api.Tests
             {
                 MilestoneID = 10,
                 ProjectID = 1,
-                Title = "Milestone A",
-                Status = "NotStarted",
-                CreatedAt = DateTime.UtcNow
+                Title = "Milestone A"
             });
 
             context.Tasks.AddRange(
-                new TaskItem
-                {
-                    TaskID = 100,
-                    MilestoneID = 10,
-                    Title = "Mine",
-                    AssignedToUserID = "user-1",
-                    Status = Status.NotStarted,
-                    Priority = "High",
-                    CreatedAt = DateTime.UtcNow
-                },
-                new TaskItem
-                {
-                    TaskID = 200,
-                    MilestoneID = 10,
-                    Title = "Not mine",
-                    AssignedToUserID = "user-2",
-                    Status = Status.NotStarted,
-                    Priority = "Low",
-                    CreatedAt = DateTime.UtcNow
-                }
+                new TaskItem { TaskID = 100, MilestoneID = 10, Title = "Task 1", AssignedToUserID = "user-1" },
+                new TaskItem { TaskID = 200, MilestoneID = 10, Title = "Task 2", AssignedToUserID = "user-2" }
             );
 
             await context.SaveChangesAsync();
-
-            // Create a mocked UserManager that will return the seeded admin user
-            var storeMock = new Mock<IUserStore<User>>();
-            var userManagerMock = new Mock<UserManager<User>>(
-                storeMock.Object, null!, null!, null!, null!, null!, null!, null!, null!);
-
-            userManagerMock.Setup(m => m.FindByIdAsync("user-1")).ReturnsAsync(seededUser);
-            userManagerMock.Setup(m => m.UpdateAsync(It.IsAny<User>())).ReturnsAsync(IdentityResult.Success);
 
             var tasksController = new TasksController(context)
             {
@@ -198,16 +164,47 @@ namespace Projello.Api.Tests
             var result = await tasksController.GetTasksByProject(1);
 
             var ok = Assert.IsType<OkObjectResult>(result.Result);
-            
-            // FIX 1: Cast directly to the real DTO collection type shown in your logs
             var items = Assert.IsAssignableFrom<IEnumerable<TaskReadDto>>(ok.Value).ToList(); 
 
-            // FIX 2: Expect 2 tasks instead of 1, because both belong to Project 1
             Assert.Equal(2, items.Count);
-            
-            // (Optional) Verify that the actual content inside the list matches what you expect
             Assert.Contains(items, t => t.AssignedToUserID == "user-1");
             Assert.Contains(items, t => t.AssignedToUserID == "user-2");
+        }
+
+        [Fact]
+        public async Task GetTasksByProject_ProjectDoesNotExist_ReturnsNotFound()
+        {
+            using var context = CreateContext();
+            await context.SaveChangesAsync(); // DB is entirely empty
+
+            var tasksController = new TasksController(context)
+            {
+                ControllerContext = CreateControllerContext("user-1", "1")
+            };
+
+            var result = await tasksController.GetTasksByProject(999);
+            
+            // Defensively check for both variations of NotFound
+            Assert.True(result.Result is NotFoundResult || result.Result is NotFoundObjectResult);
+        }
+
+        [Fact]
+        public async Task GetMyTasks_UserNotAuthenticated_ReturnsUnauthorized()
+        {
+            using var context = CreateContext();
+            var tasksController = new TasksController(context)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    // FIXED: Explicitly provide an empty, unauthenticated identity
+                    HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity()) } 
+                }
+            };
+
+            var result = await tasksController.GetMyTasks();
+
+            // Defensively check for both variations of Unauthorized
+            Assert.True(result.Result is UnauthorizedResult || result.Result is UnauthorizedObjectResult); 
         }
     }
 }
