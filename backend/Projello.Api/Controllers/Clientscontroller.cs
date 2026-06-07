@@ -135,6 +135,8 @@ namespace Projello.Api.Controllers
             return Ok(new { Message = "Client created successfully.", ClientID = client.ClientID });
         }
 
+        
+
         // Update Client financials and status (without blacklisting)
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateClient(int id, [FromBody] ClientUpdateDto dto)

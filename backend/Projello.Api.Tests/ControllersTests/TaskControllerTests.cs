@@ -122,6 +122,42 @@ namespace Projello.Api.Tests
         }
 
         [Fact]
+        public async Task CreateTask_AssignedUserNotMemberOfProject_ReturnsBadRequest()
+        {
+            var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<Projello.Api.Data.AppDbContext>()
+                .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString()).Options;
+            using var context = new Projello.Api.Data.AppDbContext(options);
+
+            // Seed a valid milestone, but DO NOT add the worker to ProjectMembers
+            context.Milestones.Add(new Projello.Api.Models.Milestone { MilestoneID = 30, ProjectID = 3, Title = "Milestone A" });
+            context.SaveChanges();
+
+            var controller = new TasksController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(new[]
+                    {
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "admin-id"),
+                        new System.Security.Claims.Claim("RoleID", "1") // Admin bypasses creation guards but hits user assignment check
+                    }, "TestAuth"))
+                }
+            };
+
+            var dto = new Projello.Api.DTOs.TaskCreateDto 
+            { 
+                MilestoneID = 30, 
+                Title = "Task for Outsider", 
+                AssignedToUserID = "random-external-user" 
+            };
+            
+            var result = await controller.CreateTask(dto);
+
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
         public async Task GetTasksForProject_ReturnsTasksForProject()
         {
             using var context = CreateContext();
@@ -227,6 +263,250 @@ namespace Projello.Api.Tests
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
             var list = Assert.IsAssignableFrom<System.Collections.Generic.IEnumerable<TaskReadDto>>(okResult.Value);
             Assert.Empty(list);
+        }
+
+        [Fact]
+        public async Task GetTasksByProject_UserIsAdmin_ReturnsTasksAndExecutesMappingBranches()
+        {
+            var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<Projello.Api.Data.AppDbContext>()
+                .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString()).Options;
+            using var context = new Projello.Api.Data.AppDbContext(options);
+
+            // Seed data with milestones and tasks so loops actually run
+            context.Milestones.Add(new Milestone { MilestoneID = 10, ProjectID = 1, Title = "Phase 1" });
+            context.Tasks.AddRange(
+                new TaskItem { TaskID = 50, MilestoneID = 10, Title = "Task 1", Status = Status.NotStarted, Priority = "High" },
+                new TaskItem { TaskID = 51, MilestoneID = 10, Title = "Task 2", Status = Status.Completed, Priority = "Low" }
+            );
+            context.SaveChanges();
+
+            var controller = new TasksController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(new[]
+                    {
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "admin-id"),
+                        new System.Security.Claims.Claim("RoleID", "1") // Admin role bypasses guards and loads full dataset
+                    }, "TestAuth"))
+                }
+            };
+
+            var result = await controller.GetTasksByProject(1);
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var list = Assert.IsAssignableFrom<System.Collections.Generic.IEnumerable<TaskReadDto>>(okResult.Value);
+
+            // This ensures your mapping branches (true/false states of lists) are deeply evaluated
+            Assert.Equal(2, list.Count());
+        }
+
+       [Fact]
+        public async Task GetMyTasks_AuthenticatedUserWithTasks_ExecutesMappingBranches()
+        {
+            var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<Projello.Api.Data.AppDbContext>()
+                .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString()).Options;
+            using var context = new Projello.Api.Data.AppDbContext(options);
+
+            context.Milestones.Add(new Projello.Api.Models.Milestone { MilestoneID = 20, ProjectID = 2, Title = "Sprint 1" });
+            context.Tasks.Add(new Projello.Api.Models.TaskItem { TaskID = 99, MilestoneID = 20, Title = "My Assigned Task", AssignedToUserID = "worker-777", Status = Projello.Api.Models.Status.NotStarted, Priority = "Medium" });
+            context.SaveChanges();
+
+            var controller = new TasksController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(new[]
+                    {
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "worker-777"),
+                        new System.Security.Claims.Claim("RoleID", "3")
+                    }, "TestAuth"))
+                }
+            };
+
+            var result = await controller.GetMyTasks();
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var list = Assert.IsAssignableFrom<System.Collections.Generic.IEnumerable<TaskReadDto>>(okResult.Value);
+
+            Assert.Single(list);
+        }
+
+        [Fact]
+        public async Task CreateTask_MilestoneDoesNotExist_ReturnsNotFound()
+        {
+            var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<Projello.Api.Data.AppDbContext>()
+                .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString()).Options;
+            using var context = new Projello.Api.Data.AppDbContext(options);
+
+            var controller = new TasksController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(new[]
+                    {
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "admin-id"),
+                        new System.Security.Claims.Claim("RoleID", "1")
+                    }, "TestAuth"))
+                }
+            };
+
+            var dto = new Projello.Api.DTOs.TaskCreateDto { MilestoneID = 999, Title = "Orphaned Task" };
+            var result = await controller.CreateTask(dto);
+
+            Assert.IsType<NotFoundObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task UpdateTask_ValidRequestAndUserIsAdmin_UpdatesTaskAndConvertsDueDate()
+        {
+            var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<Projello.Api.Data.AppDbContext>()
+                .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString()).Options;
+            using var context = new Projello.Api.Data.AppDbContext(options);
+
+            // 1. Seed Milestone, Project Member (so validation passes), and the target Task
+            context.Milestones.Add(new Projello.Api.Models.Milestone { MilestoneID = 40, ProjectID = 4, Title = "Sprint 2" });
+            context.ProjectMembers.Add(new Projello.Api.Models.ProjectMember { ProjectID = 4, UserID = "worker-99", AssignedAs = "Developer" });
+            context.Tasks.Add(new Projello.Api.Models.TaskItem 
+            { 
+                TaskID = 300, 
+                MilestoneID = 40, 
+                Title = "Old Title", 
+                Description = "Old Desc", 
+                Priority = "Low", 
+                Status = Projello.Api.Models.Status.NotStarted 
+            });
+            context.SaveChanges();
+
+            var controller = new TasksController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(new[]
+                    {
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "admin-id"),
+                        new System.Security.Claims.Claim("RoleID", "1") // Admin to clear guard clauses
+                    }, "TestAuth"))
+                }
+            };
+
+            // 2. Build the update payload (testing the DateOnly conversion branch)
+            var dto = new Projello.Api.DTOs.TaskUpdateDto
+            {
+                Title = "Brand New Title",
+                Description = "Updated Description",
+                Priority = "High",
+                AssignedToUserID = "worker-99",
+                DueDate = new System.DateTime(2026, 12, 25)
+            };
+
+            var result = await controller.UpdateTask(300, dto);
+            
+            // 3. Assertions (Executes lines for SaveChanges and returns NoContent)
+            Assert.IsType<NoContentResult>(result);
+            
+            var updatedTask = await context.Tasks.FindAsync(300);
+            Assert.Equal("Brand New Title", updatedTask.Title);
+            Assert.Equal("High", updatedTask.Priority);
+            Assert.Equal(new System.DateOnly(2026, 12, 25), updatedTask.DueDate);
+        }
+
+        [Fact]
+        public async Task UpdateTask_TaskDoesNotExist_ReturnsNotFound()
+        {
+            var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<Projello.Api.Data.AppDbContext>()
+                .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString()).Options;
+            using var context = new Projello.Api.Data.AppDbContext(options);
+
+            var controller = new TasksController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(new[]
+                    {
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "admin-id"),
+                        new System.Security.Claims.Claim("RoleID", "1")
+                    }, "TestAuth"))
+                }
+            };
+
+            var dto = new Projello.Api.DTOs.TaskUpdateDto { Title = "Ghost Update" };
+            var result = await controller.UpdateTask(9999, dto); // ID that doesn't exist
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task DeleteTask_ValidRequestAndUserIsAdmin_RemovesTaskAndReturnsNoContent()
+        {
+            var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<Projello.Api.Data.AppDbContext>()
+                .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString()).Options;
+            using var context = new Projello.Api.Data.AppDbContext(options);
+
+            // 1. Seed Milestone and the Task to delete
+            context.Milestones.Add(new Projello.Api.Models.Milestone { MilestoneID = 50, ProjectID = 5, Title = "Sprint 3" });
+            context.Tasks.Add(new Projello.Api.Models.TaskItem 
+            { 
+                TaskID = 500, 
+                MilestoneID = 50, 
+                Title = "Task to be Deleted", 
+                Priority = "Low", 
+                Status = Projello.Api.Models.Status.NotStarted 
+            });
+            context.SaveChanges();
+
+            var controller = new TasksController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(new[]
+                    {
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "admin-id"),
+                        new System.Security.Claims.Claim("RoleID", "1") // Admin clears security checks
+                    }, "TestAuth"))
+                }
+            };
+
+            // 2. Act
+            var result = await controller.DeleteTask(500);
+            
+            // 3. Assert
+            Assert.IsType<NoContentResult>(result);
+            
+            // Verify it's actually removed from the DB
+            var deletedTask = await context.Tasks.FindAsync(500);
+            Assert.Null(deletedTask);
+        }
+
+        [Fact]
+        public async Task DeleteTask_TaskDoesNotExist_ReturnsNotFound()
+        {
+            var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<Projello.Api.Data.AppDbContext>()
+                .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString()).Options;
+            using var context = new Projello.Api.Data.AppDbContext(options);
+
+            var controller = new TasksController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(new[]
+                    {
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "admin-id"),
+                        new System.Security.Claims.Claim("RoleID", "1")
+                    }, "TestAuth"))
+                }
+            };
+
+            // Act
+            var result = await controller.DeleteTask(99999); // Non-existent task ID
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
         }
     }
 }
