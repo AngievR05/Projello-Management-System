@@ -547,14 +547,14 @@ namespace Projello.Api.Tests
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
             using var context = new AppDbContext(options);
 
-            context.Milestones.Add(new Milestone { MilestoneID = 70, ProjectID = 7, Title = "Sprint 5" });
-            conext.Tasks.Add(new TaskItem
-            {
-                TaskID = 601,
+            context.Milestones.Add(new Milestone { MilestoneID = 61, ProjectID = 7, Title = "Sprint 5" });
+            context.Tasks.Add(new TaskItem 
+            { 
+                TaskID = 601, 
                 MilestoneID = 61, 
-                Title = "Updatable Task",
-                Status = Status.NotStarted,
-                Priority = "Low"
+                Title = "Updatable Task", 
+                Status = Status.NotStarted, 
+                Priority = "Low" 
             });
             context.SaveChanges();
 
@@ -564,12 +564,12 @@ namespace Projello.Api.Tests
                 HttpContext = new DefaultHttpContext { User = CreateControllerContext("admin-id", "1").HttpContext.User }
             };
 
-            // Act
-            var statusDto = new TaskStatusUpdateDto { Status = "In Progress" };
+            // "Completed" is a valid value matching your Status enum definitions
+            var statusDto = new TaskStatusUpdateDto { Status = "Completed" };
             var result = await controller.UpdateTaskStatus(601, statusDto);
-
-            // Assert
+            
             Assert.IsType<NoContentResult>(result);
+            Assert.Equal(Status.Completed, context.Tasks.Find(601)!.Status);
         }
     }
 }
