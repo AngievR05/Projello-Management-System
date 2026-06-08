@@ -156,7 +156,7 @@ it("filters items reactively through user search input", async () => {
     loginAsRole(1); 
     
     global.fetch = jest.fn().mockImplementation((url) => {
-      if (url.endsWith("/api/Auth/generate-invite")) {
+      if (url.toLowerCase().endsWith("/api/auth/generate-invite")) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({ inviteCode: "PROJELLO-2026-X" }),
