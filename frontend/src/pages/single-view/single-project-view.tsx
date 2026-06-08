@@ -12,7 +12,7 @@ import CustomModal from "../../components/CustomModal";
 
 import { useIncomingCallNotifications } from "../../features/realtime/hooks/useIncomingCallNotifications";
 
-type ProjectDetails = {
+type ProjectDetails= {
   projectID: number;
   name: string;
   description: string;
@@ -37,12 +37,10 @@ type SiteImageUpdate = {
 function RecentSitePhotosSection({ 
   updates, 
   onAddPhoto, 
-  onImageClick,
   isUploading 
 }: { 
   updates: SiteImageUpdate[]; 
   onAddPhoto: () => void; 
-  onImageClick: (url: string) => void;
   isUploading: boolean;
 }) {
   const recentImages = updates.slice(0, 6);
@@ -51,6 +49,13 @@ function RecentSitePhotosSection({
     <section className="single-project-view__photo-section">
       <div className="single-project-view__panel-header-row">
         <h3 className="single-project-view__panel-title">Recent Site Photos</h3>
+        <button 
+          type="button" 
+          className="single-project-view__view-all-button"
+          onClick={() => console.log("Navigate to Gallery")}
+        >
+          View All →
+        </button>
       </div>
 
       <div style={{
@@ -90,7 +95,7 @@ function RecentSitePhotosSection({
                 borderRadius: "10px",
                 cursor: "pointer"
               }}
-              onClick={() => onImageClick(update.imageUrl)}
+              onClick={() => console.log("Clicked image:", update)}
             />
           ))
         ) : (
@@ -137,28 +142,24 @@ export default function SingleProjectViewPage() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [activeTab, setActiveTab] = useState<"overview" | "discussion" >("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "discussion" | "gallery">("overview");
 
   //Rename project function
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameValue, setRenameValue] = useState("");
   const [renameSaving, setRenameSaving] = useState(false);
 
-  // Edit description function
-  const [showEditDescModal, setShowEditDescModal] = useState(false);
-  const [descValue, setDescValue] = useState("");
-  const [descSaving, setDescSaving] = useState(false);
+  // Description edit states
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [descriptionValue, setDescriptionValue] = useState("");
+  const [descriptionSaving, setDescriptionSaving] = useState(false);
 
   const openRenameModal = () => {
     setRenameValue(project?.name || "");
     setShowRenameModal(true);
   };
 
-  const openEditDescModal = () => {
-    setDescValue(project?.description || "");
-    setShowEditDescModal(true);
-  };
-
+  //Rename project function
   const handleRenameProject = async () => {
     if (!project) return;
 
@@ -202,10 +203,22 @@ export default function SingleProjectViewPage() {
     }
   };
 
-  const handleUpdateDescription = async () => {
+  // description edit functions
+  const startEditingDescription = () => {
+    setDescriptionValue(project?.description || "");
+    setIsEditingDescription(true);
+  };
+
+  const saveDescription = async () => {
     if (!project) return;
 
-    setDescSaving(true);
+    const trimmedDesc = descriptionValue.trim();
+    if (trimmedDesc === project.description) {
+      setIsEditingDescription(false);
+      return;
+    }
+
+    setDescriptionSaving(true);
 
     try {
       const token = localStorage.getItem("token");
@@ -217,7 +230,7 @@ export default function SingleProjectViewPage() {
         },
         body: JSON.stringify({
           name: project.name,
-          description: descValue.trim(),
+          description: trimmedDesc,
           clientID: project.clientID,
           startDate: project.startDate,
           dueDate: project.dueDate,
@@ -229,14 +242,19 @@ export default function SingleProjectViewPage() {
         throw new Error(errorText || "Failed to update description.");
       }
 
-      setProject((prev) => (prev ? { ...prev, description: descValue.trim() } : prev));
-      antdMessage.success("Project description updated successfully.");
-      setShowEditDescModal(false);
+      setProject((prev) => (prev ? { ...prev, description: trimmedDesc } : prev));
+      antdMessage.success("Description updated successfully.");
+      setIsEditingDescription(false);
     } catch (err: any) {
       antdMessage.error(err.message || "Failed to update description.");
     } finally {
-      setDescSaving(false);
+      setDescriptionSaving(false);
     }
+  };
+
+  const cancelDescriptionEdit = () => {
+    setIsEditingDescription(false);
+    setDescriptionValue("");
   };
 
   // Get current user role
@@ -618,6 +636,7 @@ export default function SingleProjectViewPage() {
             Discussion
           </button>
           
+       
         </div>
       </div>
 
@@ -650,21 +669,57 @@ export default function SingleProjectViewPage() {
         <>
           <div className="single-project-view__main-grid">
             <div className="single-project-view__panel">
-              <div className="single-project-view__panel-header-row" style={{ marginBottom: "12px" }}>
-                <h3 className="single-project-view__panel-title" style={{ margin: 0 }}>Description</h3>
-                {[4].includes(currentUserRole) && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <h3 className="single-project-view__panel-title">Description</h3>
+                
+                {[1, 4].includes(currentUserRole) && !isEditingDescription && (
                   <button
                     type="button"
-                    onClick={openEditDescModal}
-                    className="single-project-view__rename-link"
+                    onClick={startEditingDescription}
+                    style={{ background: "none", border: "none", color: "#5e745f", cursor: "pointer", fontSize: "14px", fontWeight: 600 }}
                   >
-                    Edit Description
+                    Edit
                   </button>
                 )}
               </div>
-              <p className="single-project-view__project-description">
-                {project.description || "No description provided."}
-              </p>
+
+              {isEditingDescription ? (
+                <div>
+                  <textarea
+                    value={descriptionValue}
+                    onChange={(e) => setDescriptionValue(e.target.value)}
+                    style={{
+                      width: "100%",
+                      minHeight: "140px",
+                      padding: "12px",
+                      border: "1px solid #d9d9d9",
+                      borderRadius: "6px",
+                      fontSize: "15px",
+                      resize: "vertical"
+                    }}
+                    placeholder="Enter project description..."
+                  />
+                  <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+                    <button
+                      onClick={saveDescription}
+                      disabled={descriptionSaving}
+                      style={{ background: "#5e745f", color: "white", padding: "8px 20px", borderRadius: "6px", fontWeight: 600 }}
+                    >
+                      {descriptionSaving ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button
+                      onClick={cancelDescriptionEdit}
+                      style={{ padding: "8px 20px", borderRadius: "6px" }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="single-project-view__project-description">
+                  {project.description || "No description provided."}
+                </p>
+              )}
             </div>
 
             {/* Milestones Panel */}
@@ -674,13 +729,14 @@ export default function SingleProjectViewPage() {
                 <button 
                   onClick={handleAddMilestone}
                   style={{
-                    background: "#1890ff",
+                    background: "#5e745f",
                     color: "white",
                     border: "none",
                     padding: "6px 14px",
                     borderRadius: "6px",
                     cursor: "pointer",
-                    fontSize: "13px"
+                    fontSize: "13px",
+                    fontWeight: 600
                   }}
                 >
                   + Add Milestone
@@ -727,7 +783,7 @@ export default function SingleProjectViewPage() {
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <span style={{ 
                             fontWeight: "bold", 
-                            color: "#1890ff", 
+                            color: "#5e745f", 
                             minWidth: "45px", 
                             textAlign: "right" 
                           }}>
@@ -770,7 +826,6 @@ export default function SingleProjectViewPage() {
           <RecentSitePhotosSection 
             updates={siteUpdates} 
             onAddPhoto={handleAddPhoto}
-            onImageClick={(url) => console.log(url)} // <-- Quick fix inline
             isUploading={isUploading}
           />
         </>
@@ -780,11 +835,7 @@ export default function SingleProjectViewPage() {
         <DiscussionTab projectId={parseInt(projectId || "0")} />
       )}
 
-      {activeTab === "gallery" && (
-        <div style={{ padding: 40, textAlign: "center" }}>
-          <p>Gallery coming soon...</p>
-        </div>
-      )}
+    
 
       {/* Hidden file input for upload */}
       <input
@@ -793,7 +844,6 @@ export default function SingleProjectViewPage() {
         style={{ display: "none" }}
         accept="image/*"
         onChange={handleFileChange}
-        aria-label="Upload site photo"
       />
 
       {/* Team Members Section + Add Button */}
@@ -930,56 +980,6 @@ export default function SingleProjectViewPage() {
               onChange={(e) => setRenameValue(e.target.value)}
               className="project-add-modal__input"
               placeholder="Enter new project name"
-            />
-          </div>
-        </CustomModal>
-      )}
-
-      {/* Edit Description Modal */}
-      {showEditDescModal && (
-        <CustomModal
-          open={showEditDescModal}
-          onCancel={() => setShowEditDescModal(false)}
-          title="Edit Project Description"
-          footer={[
-            <button
-              key="cancel"
-              type="button"
-              className="single-project-view__view-all-button"
-              onClick={() => setShowEditDescModal(false)}
-            >
-              Cancel
-            </button>,
-            <button
-              key="save"
-              type="button"
-              className="single-project-view__call-button"
-              onClick={handleUpdateDescription}
-              disabled={descSaving}
-            >
-              {descSaving ? "Saving..." : "Save Description"}
-            </button>,
-          ]}
-        >
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <label style={{ fontWeight: 600, color: "var(--text-dark)" }}>
-              Description
-            </label>
-            <textarea
-              value={descValue}
-              onChange={(e) => setDescValue(e.target.value)}
-              className="project-add-modal__input"
-              placeholder="Enter project description..."
-              rows={5}
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                fontSize: "14px",
-                border: "1px solid #d9d9d9",
-                borderRadius: "6px",
-                resize: "vertical",
-                outline: "none"
-              }}
             />
           </div>
         </CustomModal>

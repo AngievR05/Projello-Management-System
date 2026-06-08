@@ -24,6 +24,7 @@ type ManagementClientTableProps = {
   onActionSelect?: (row: ManagementClientRow, actionKey: string) => void;
   showEditFinancesAction?: boolean;
   className?: string;
+  hideProjectsColumn?: boolean;
 };
 
 export default function ManagementClientTable({
@@ -33,6 +34,7 @@ export default function ManagementClientTable({
   onActionSelect,
   showEditFinancesAction = false,
   className = "",
+  hideProjectsColumn = false,
 }: ManagementClientTableProps) {
   return (
     <section
@@ -40,17 +42,23 @@ export default function ManagementClientTable({
       role="table"
       aria-label="Clients table"
     >
+      {/* Header */}
       <div className="management-client-table__header" role="rowgroup">
         <div role="row" className="management-client-table__header-row">
           <div className="management-client-table__cell management-client-table__cell--client" role="columnheader">Client</div>
           <div className="management-client-table__cell" role="columnheader">Total Paid</div>
           <div className="management-client-table__cell" role="columnheader">Outstanding</div>
-          <div className="management-client-table__cell" role="columnheader">Projects</div>
+
+          {!hideProjectsColumn && (
+            <div className="management-client-table__cell" role="columnheader">Projects</div>
+          )}
+
           <div className="management-client-table__cell" role="columnheader">Status</div>
           <div className="management-client-table__cell management-client-table__cell--actions" role="columnheader" aria-hidden="true" />
         </div>
       </div>
 
+      {/* Body */}
       <div className="management-client-table__body" role="rowgroup">
         {rows.map((row) => (
           <div
@@ -59,6 +67,7 @@ export default function ManagementClientTable({
             role="row"
             onClick={() => onRowClick?.(row)}
           >
+            {/* Client */}
             <div className="management-client-table__cell management-client-table__cell--client" role="cell">
               <div className="management-client-table__identity">
                 <div className="management-client-table__avatar" aria-hidden="true">
@@ -71,11 +80,13 @@ export default function ManagementClientTable({
               </div>
             </div>
 
+            {/* Total Paid */}
             <div className="management-client-table__cell" role="cell">
               <div className="management-client-table__value">{row.totalPaid}</div>
               <div className="management-client-table__subvalue">total paid</div>
             </div>
 
+            {/* Outstanding */}
             <div className="management-client-table__cell" role="cell">
               <div className={`management-client-table__value ${row.statusTone === "warning" ? "management-client-table__value--warning" : ""}`.trim()}>
                 {row.outstanding}
@@ -83,17 +94,22 @@ export default function ManagementClientTable({
               <div className="management-client-table__subvalue">outstanding</div>
             </div>
 
-            <div className="management-client-table__cell" role="cell">
-              <div className="management-client-table__value">{row.projects}</div>
-              <div className="management-client-table__subvalue">{row.activeProjects}</div>
-            </div>
+            {/* Projects (conditionally rendered) */}
+            {!hideProjectsColumn && (
+              <div className="management-client-table__cell" role="cell">
+                <div className="management-client-table__value">{row.projects}</div>
+                <div className="management-client-table__subvalue">{row.activeProjects}</div>
+              </div>
+            )}
 
+            {/* Status */}
             <div className="management-client-table__cell" role="cell">
               <span className={`management-client-table__badge management-client-table__badge--${row.statusTone ?? "neutral"}`.trim()}>
                 {row.status}
               </span>
             </div>
 
+            {/* Actions */}
             <div className="management-client-table__cell management-client-table__cell--actions" role="cell">
               <div onClick={(e) => e.stopPropagation()}>
                 <Dropdown
@@ -101,10 +117,9 @@ export default function ManagementClientTable({
                     items: [
                       {
                         key: "toggleBlacklist",
-                        label:
-                          row.status === "Blacklisted" ? "Unblacklist" : "Blacklist",
+                        label: row.status === "Blacklisted" ? "Unblacklist" : "Blacklist",
                         onClick: (info: any) => {
-                          info?.domEvent?.stopPropagation(); // stop bubbling from menu click
+                          info?.domEvent?.stopPropagation();
                           onActionSelect?.(row, "toggleBlacklist");
                         },
                       },
@@ -116,9 +131,9 @@ export default function ManagementClientTable({
                   <button
                     type="button"
                     className="management-client-table__action-button"
-                    onMouseDown={(e) => e.stopPropagation()}   // stop capture on pointer down
+                    onMouseDown={(e) => e.stopPropagation()}
                     onTouchStart={(e) => e.stopPropagation()}
-                    onClick={(e) => { e.stopPropagation(); onRowAction?.(row); }} // existing behavior kept
+                    onClick={(e) => { e.stopPropagation(); onRowAction?.(row); }}
                     aria-label={`Open actions for ${row.name}`}
                   >
                     <span aria-hidden="true">•••</span>

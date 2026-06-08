@@ -4,12 +4,11 @@ import "./Clients.css";
 import StatCard from "../../components/StatCard";
 import ManagementClientTable, { ManagementClientRow } from "../../components/ManagementClientTable";
 import { SearchInput } from "../../components/SearchInput";
-import { FilterButton } from "../../components/FilterButton";
-import { SortButton } from "../../components/SortButton";
 import { AddButton } from "../../components/AddButton";
 import { API_BASE_URL } from "../../config";
 import ClientAddModal from "../../components/ClientAddModal";
 import { ProjectAddModal } from "../../components/ProjectAddModal";
+
 
 type ClientSummary = {
     totalRevenue: number | null;
@@ -33,6 +32,14 @@ const getInitials = (fullName?: string) => {
     if (parts.length === 0) return "--";
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
+const parseAmount = (value: any): number => {
+    if (typeof value === "number") return value;
+    if (typeof value === "string") {
+        return parseFloat(value.replace(/[^0-9.]/g, "")) || 0;
+    }
+    return 0;
 };
 
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
@@ -63,16 +70,11 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject, currentUserR
     const [editTotalPaid, setEditTotalPaid] = useState(0);
     const [editOutstanding, setEditOutstanding] = useState(0);
     const [editStatus, setEditStatus] = useState("Active");
+    
 
     const isBlacklisted = row.status === "Blacklisted";
 
-    const parseAmount = (value: any): number => {
-        if (typeof value === "number") return value;
-        if (typeof value === "string") {
-            return parseFloat(value.replace(/[^0-9.]/g, "")) || 0;
-        }
-        return 0;
-    };
+  
 
     useEffect(() => {
         if (step === "edit-payments") {
@@ -195,9 +197,7 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject, currentUserR
                             </button>
                         )}
 
-                        <button className="action-modal__btn action-modal__btn--secondary" onClick={() => setFeedback("Edit functionality coming soon.")}>
-                            Edit Client
-                        </button>
+                     
 
                         <button
                             className="action-modal__btn action-modal__btn--secondary"
@@ -263,7 +263,7 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject, currentUserR
 
 
 
-    if (step === "edit-payments") {
+   if (step === "edit-payments") {
         return (
             <div className="action-modal-overlay" onClick={onClose}>
                 <div className="action-modal" onClick={e => e.stopPropagation()}>
@@ -273,8 +273,9 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject, currentUserR
                             <label>Total Paid (R)</label>
                             <input
                                 type="number"
+                                min="0"
                                 value={editTotalPaid}
-                                onChange={e => setEditTotalPaid(parseFloat(e.target.value) || 0)}
+                                onChange={e => setEditTotalPaid(Math.max(0, parseFloat(e.target.value) || 0))}
                                 style={{ width: "100%", padding: 8 }}
                             />
                         </div>
@@ -282,8 +283,9 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject, currentUserR
                             <label>Outstanding (R)</label>
                             <input
                                 type="number"
+                                min="0"
                                 value={editOutstanding}
-                                onChange={e => setEditOutstanding(parseFloat(e.target.value) || 0)}
+                                onChange={e => setEditOutstanding(Math.max(0, parseFloat(e.target.value) || 0))}
                                 style={{ width: "100%", padding: 8 }}
                             />
                         </div>
@@ -337,6 +339,7 @@ export default function ClientsPage() {
 
     const [showProjectAddModal, setShowProjectAddModal] = useState(false);
     const [selectedClientForProject, setSelectedClientForProject] = useState<ManagementClientRow | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -360,9 +363,14 @@ export default function ClientsPage() {
             if (!res.ok) throw new Error(await res.text() || "Failed to load clients");
 
             const data = await res.json();
+            let calculatedRevenue = 0;
+            let calculatedOutstanding = 0;
 
             const mapped: ManagementClientRow[] = (data ?? []).map((c: any) => {
                 const isBlacklisted = c.isBlacklisted || c.IsBlacklisted;
+
+                calculatedRevenue += parseAmount(c.totalPaid ?? c.TotalPaid);
+                calculatedOutstanding += parseAmount(c.outstanding ?? c.Outstanding);
 
                 return {
                     clientId: String(c.clientID ?? c.ClientID ?? c.ClientId ?? ""),
@@ -384,8 +392,8 @@ export default function ClientsPage() {
             const activeCount = mapped.length - blacklistedCount;
 
             setSummary({
-                totalRevenue: null,
-                outstanding: null,
+                totalRevenue: calculatedRevenue,
+                outstanding: calculatedOutstanding,
                 activeClients: activeCount,
                 blacklistClients: blacklistedCount,
             });
@@ -424,7 +432,7 @@ export default function ClientsPage() {
     };
 
     const refreshClientsPageData = async () => {
-        await Promise.all([fetchClients(), fetchClientSummary()]);
+        await fetchClients();
     };
 
     useEffect(() => {
@@ -441,6 +449,11 @@ export default function ClientsPage() {
         setShowProjectAddModal(true);
     };
 
+    const filteredRows = rows.filter(row =>
+    row.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    row.company.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
     return (
         <div className="clients-page">
             <div className="clients-page__stats">
@@ -450,18 +463,18 @@ export default function ClientsPage() {
                     tone="success"
                     icon={
                         <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="#16a34a">
-                            <path d="M21 7.5a.75.75 0 0 0-.75-.75H3.75A.75.75 0 0 0 3 7.5v9a.75.75 0 0 0 .75.75h16.5a.75.75 0 0 0 .75-.75v-9ZM12 12.75a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5h-3a.75.75 0 0 1-.75-.75Z" />
+                            <path d="M21 7.5a.75.75.0 0 0-.75-.75H3.75A.75.75.0 0 0 3 7.5v9a.75.75.0 0 0 .75.75h16.5a.75.75.0 0 0 .75-.75v-9ZM12 12.75a.75.75.0 0 1 .75-.75h3a.75.75.0 0 1 0 1.5h-3a.75.75.0 0 1-.75-.75Z" />
                         </svg>
                     }
                 />
 
                 <StatCard
                     value={formatCurrency(summary.outstanding)}
-                    label="Outstanding"
+                    label="Total Outstanding"
                     tone="warning"
                     icon={
-                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 28 28" fill="#f59e0b">
-                            <path d="M13.27 24.367a2.5 2.5 0 0 0-.222 1.61C7.755 25.71 4 23.226 4 19.714V19a3 3 0 0 1 3-3h10.46zM14 2a6 6 0 1 1 0 12a6 6 0 0 1 0-12m5.164 12.828l-5.002 9.992c-.501 1 .222 2.18 1.336 2.18h10.004c1.114 0 1.837-1.18 1.336-2.18l-5.002-9.992c-.552-1.104-2.12-1.104-2.672 0M21 17.5v5a.5.5 0 0 1-1 0v-5a.5.5 0 0 1 1 0m-.5 7.5a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1" />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="#f59e0b">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
                         </svg>
                     }
                 />
@@ -490,9 +503,10 @@ export default function ClientsPage() {
             </div>
 
             <div className="clients-page__controls">
-                <SearchInput placeholder="Search clients..." onSearch={(v) => console.log(v)} />
-                <FilterButton label="All Status" onFilter={() => {}} />
-                <SortButton label="Sort" onSort={() => {}} />
+                <SearchInput
+                    placeholder="Search clients..."
+                    onSearch={setSearchTerm}
+                />
             </div>
 
             <section className="clients-page__table-section">
@@ -506,9 +520,17 @@ export default function ClientsPage() {
                     </div>
                 </div>
 
-                {loading ? <p className="clients-page__message">Loading clients...</p> :
-                 error ? <p className="clients-page__message--error">Error: {error}</p> :
-                 <ManagementClientTable rows={rows} onRowAction={handleRowAction} onRowClick={handleRowClick} />}
+                {loading ? (
+                    <p className="clients-page__message">Loading clients...</p>
+                ) : error ? (
+                    <p className="clients-page__message--error">Error: {error}</p>
+                ) : (
+                    <ManagementClientTable
+                        rows={filteredRows}
+                        onRowAction={handleRowAction}
+                        onRowClick={handleRowClick}
+                    />
+                )}
             </section>
 
             <ClientAddModal open={showAddModal} onClose={() => setShowAddModal(false)} onClientAdded={fetchClients} />
@@ -522,6 +544,8 @@ export default function ClientsPage() {
                     currentUserRole={currentUserRole}
                 />
             )}
+
+           
 
             {showProjectAddModal && selectedClientForProject && (
                 <ProjectAddModal
@@ -546,8 +570,9 @@ export default function ClientsPage() {
                                     description: data.description?.trim() || null,
                                     clientID: parseInt(selectedClientForProject.clientId, 10),
                                     status: "Planning",
+                                    startDate: data.startDate || null,
                                     dueDate: data.dueDate || null,
-                                    startDate: null,
+                                    
                                 }),
                             });
                             if (!res.ok) throw new Error(await res.text() || "Failed to create project");
