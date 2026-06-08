@@ -1,3 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
+namespace Projello.Api.DTOs;
+
+[ExcludeFromCodeCoverage]
 public class UpdatePasswordDto
 {
     public string CurrentPassword { get; set; } = null!;

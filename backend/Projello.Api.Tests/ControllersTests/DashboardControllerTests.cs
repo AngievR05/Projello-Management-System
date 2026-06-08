@@ -108,5 +108,26 @@ namespace Projello.Api.Tests
             Assert.Single(dto.ActiveProjects);
             Assert.Equal("My Project", dto.ActiveProjects.First().Name);
         }
+
+        [Fact]
+        public async Task GetDashboardOverview_NonAdminWithNoCompany_ReturnsEmptyCollections()
+        {
+            var context = GetInMemoryDbContext();
+            var userId = "lonely-user";
+
+            var controller = new DashboardController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                // Role 3 (Worker) but passing null/empty string for companyId claim
+                HttpContext = new DefaultHttpContext { User = CreateUser(userId, "3", "") }
+            };
+
+            var result = await controller.GetDashboardOverview();
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var dto = Assert.IsType<DashboardOverviewDto>(ok.Value);
+
+            // Verifies that the empty scoping conditions evaluate smoothly
+            Assert.Empty(dto.ActiveProjects);
+        }
     }
 }

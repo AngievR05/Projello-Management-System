@@ -1,8 +1,9 @@
-namespace Projello.Api.DTOs
-{
+namespace Projello.Api.DTOs;
+using System.Diagnostics.CodeAnalysis;
 
- 
+
     // Returned in API responses for client blacklist status
+    [ExcludeFromCodeCoverage]
     public class ClientBlacklistStatusDto
     {
         public int ClientID { get; set; }
@@ -12,5 +13,5 @@ namespace Projello.Api.DTOs
         public DateTime? BlacklistedAt { get; set; }
         public string? BlacklistedByName { get; set; }
     }
-}
+
  
