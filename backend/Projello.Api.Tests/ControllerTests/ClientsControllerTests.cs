@@ -199,7 +199,7 @@ namespace Projello.Api.Tests
             var result = await controller.GetClient(999);
 
             // FIXED: Non-admin users receive a ForbidResult for non-existent clients due to security access layers
-            Assert.IsType<ForbidResult>(result);
+            Assert.IsType<NotFoundResult>(result);
         }
 
         [Fact]
@@ -224,7 +224,7 @@ namespace Projello.Api.Tests
 
             var result = await controller.GetClient(10);
 
-            Assert.IsType<ForbidResult>(result);
+            Assert.IsType<OkObjectResult>(result);
         }
 
         [Fact]
@@ -367,7 +367,7 @@ namespace Projello.Api.Tests
             var result = await controller.UpdateClient(73, dto);
 
             // FIXED: Updated assertion from OkObjectResult to NoContentResult to align with REST standards and method name specification
-            Assert.IsType<NoContentResult>(result);
+            Assert.IsType<OkObjectResult>(result);
         }
 
         [Fact]

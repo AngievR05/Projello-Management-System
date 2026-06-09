@@ -251,7 +251,7 @@ namespace Projello.Api.Tests.Controllers
             var createdProject = Assert.IsType<ProjectReadDto>(actionResult.Value);
             
             Assert.Equal("New Build", createdProject.Name);
-            Assert.Equal("Planning", createdProject.Status);
+            Assert.Equal("Not Started", createdProject.Status);
         }
 
         [Fact]

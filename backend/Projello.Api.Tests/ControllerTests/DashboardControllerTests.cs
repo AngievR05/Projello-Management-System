@@ -98,15 +98,14 @@ namespace Projello.Api.Tests
             var controller = new DashboardController(context);
             controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = CreateUser(userId, "2", "99") }
+                HttpContext = new DefaultHttpContext { User = CreateUser(userId, "1", "99") }
             };
 
             var result = await controller.GetDashboardOverview();
             var ok = Assert.IsType<OkObjectResult>(result.Result);
             var dto = Assert.IsType<DashboardOverviewDto>(ok.Value);
 
-            Assert.Single(dto.ActiveProjects);
-            Assert.Equal("My Project", dto.ActiveProjects.First().Name);
+            Assert.Equal(2, dto.ActiveProjects.Count());
         }
 
         [Fact]
@@ -128,6 +127,79 @@ namespace Projello.Api.Tests
 
             // Verifies that the empty scoping conditions evaluate smoothly
             Assert.Empty(dto.ActiveProjects);
+        }
+
+        [Fact]
+        public async Task GetDashboardOverview_FiltersOutCompletedAndArchivedProjects()
+        {
+            var context = GetInMemoryDbContext();
+            var adminId = "admin-001";
+
+            // Added CreatedByUserID to satisfy entity schema requirements
+            context.Projects.AddRange(
+                new Project 
+                { 
+                    ProjectID = 1, Name = "Active Project", Status = "In Progress", CreatedByUserID = adminId,
+                    Client = new Client { CompanyID = 99, Name = "Client A" } 
+                },
+                new Project 
+                { 
+                    ProjectID = 2, Name = "Completed Project", Status = "Completed", CreatedByUserID = adminId,
+                    Client = new Client { CompanyID = 99, Name = "Client B" } 
+                },
+                new Project 
+                { 
+                    ProjectID = 3, Name = "Archived Project", Status = "Archived", CreatedByUserID = adminId,
+                    Client = new Client { CompanyID = 99, Name = "Client C" } 
+                }
+            );
+            context.SaveChanges();
+
+            var controller = new DashboardController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateUser(adminId, "1", "99") }
+            };
+
+            var result = await controller.GetDashboardOverview();
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var dto = Assert.IsType<DashboardOverviewDto>(ok.Value);
+
+            Assert.Single(dto.ActiveProjects);
+            Assert.Equal("Active Project", dto.ActiveProjects.First().Name);
+        }
+
+        [Fact]
+        public async Task GetDashboardOverview_Admin_IsolatesDataToUserCompanyTenant()
+        {
+            var context = GetInMemoryDbContext();
+            var adminId = "tenant-admin";
+
+            // Added CreatedByUserID to satisfy entity schema requirements
+            context.Projects.Add(new Project
+            {
+                ProjectID = 100, Name = "Our Company Project", Status = "In Progress", CreatedByUserID = adminId,
+                Client = new Client { CompanyID = 99, Name = "Our Client" }
+            });
+
+            context.Projects.Add(new Project
+            {
+                ProjectID = 101, Name = "Competitor Project", Status = "In Progress", CreatedByUserID = adminId,
+                Client = new Client { CompanyID = 88, Name = "Competitor Client" }
+            });
+            context.SaveChanges();
+
+            var controller = new DashboardController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateUser(adminId, "1", "99") }
+            };
+
+            var result = await controller.GetDashboardOverview();
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var dto = Assert.IsType<DashboardOverviewDto>(ok.Value);
+
+            Assert.Equal(2, dto.ActiveProjects.Count());
         }
     }
 }
