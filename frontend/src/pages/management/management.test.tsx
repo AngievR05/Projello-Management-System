@@ -44,78 +44,50 @@ import ManagementPage from "./management";
     ),
     }));
 
-    jest.mock("../../components/ManagementClientTable", () => ({
-    __esModule: true,
-    default: ({ rows, onRowClick }: any) => (
-        <table data-testid="projects-table">
-        <tbody>
-            {rows.map((row: any) => (
-            <tr key={row.clientId} onClick={() => onRowClick(row)} data-testid="project-row">
-                <td>{row.initials}</td>
-                <td>{row.name}</td>
-                <td>{row.company}</td>
-                <td>{row.status}</td>
-            </tr>
-            ))}
-        </tbody>
-        </table>
-    ),
-    }));
-
+            jest.mock("../../components/ManagementClientTable", () => ({
+            __esModule: true,
+            default: ({ rows, onRowClick, onRowAction }: any) => (
+                <table data-testid="projects-table">
+                <tbody>
+                    {rows.map((row: any) => (
+                    <tr key={row.clientId} data-testid="project-row">
+                        <td onClick={() => onRowClick(row)}>{row.initials}</td>
+                        {/* Add a specific trigger for the action/modal */}
+                        <td>
+                            <button 
+                                data-testid={`action-btn-${row.clientId}`} 
+                                onClick={() => onRowAction(row)}
+                            >
+                                Edit
+                            </button>
+                        </td>
+                    </tr>
+                    ))}
+                </tbody>
+                </table>
+            ),
+        }));
     // test specs
 
-    describe("ManagementPage Component", () => {
-  const mockProjects = [
-    {
-      projectID: 101,
-      name: "Warehouse Construction",
-      description: "Building foundation",
-      clientID: 5,
-      clientName: "Build Corp",
-      status: "Active",
-      startDate: null as string | null,
-      dueDate: null as string | null,
-      createdAt: "2026-05-01",
-    },
-    {
-      projectID: 102,
-      name: "Office Refurbishment",
-      description: "Painting rooms",
-      clientID: 9,
-      clientName: "Apex Industries",
-      status: "Completed",
-      startDate: null as string | null,
-      dueDate: null as string | null,
-      createdAt: "2026-05-15",
-    },
-  ];
+   describe("ManagementPage Component", () => {
+    const mockProjects = [
+        { projectID: 101, name: "Warehouse Construction", clientID: 5, status: "Active" },
+        { projectID: 102, name: "Office Refurbishment", clientID: 9, status: "Completed" },
+    ];
+    const mockClientsLookup = [{ clientID: 5, name: "Build Corp" }, { clientID: 9, name: "Apex Industries" }];
 
-  const mockClientsLookup = [
-    { clientID: 5, name: "Build Corp" },
-    { clientID: 9, name: "Apex Industries" },
-  ];
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    localStorage.clear();
-
-    // Universal multi-endpoint fetch simulation
-    global.fetch = jest.fn().mockImplementation((url: string) => {
-      if (url.endsWith("/api/projects")) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockProjects),
+    beforeEach(() => {
+        jest.clearAllMocks();
+        localStorage.clear();
+        global.fetch = jest.fn().mockImplementation((url: string) => {
+            if (url.includes("/api/projects/101/status")) return Promise.resolve({ ok: true });
+            if (url.includes("/api/projects/101")) return Promise.resolve({ ok: true });
+            if (url.includes("/api/projects")) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockProjects) });
+            if (url.includes("/api/clients")) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockClientsLookup) });
+            if (url.includes("/api/workers")) return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+            return Promise.reject(new Error(`Unhandled URL: ${url}`));
         });
-      }
-      if (url.endsWith("/clients")) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockClientsLookup),
-        });
-      }
-      return Promise.reject(new Error(`Unhandled URL: ${url}`));
-    }) as jest.Mock;
-  });
+    });
 
   it("renders loading initially and fetches project data successfully", async () => {
     render(<ManagementPage />);
@@ -166,21 +138,30 @@ import ManagementPage from "./management";
     expect(screen.queryByTestId("clients-view")).not.toBeInTheDocument();
   });
 
-  it("redirects users to single-view routing upon project row click interaction", async () => {
+ it("opens the project action modal upon row action", async () => {
     render(<ManagementPage />);
-
     await waitFor(() => {
-      expect(screen.queryByText(/Loading projects.../i)).not.toBeInTheDocument();
+        expect(screen.queryByText(/Loading projects.../i)).not.toBeInTheDocument();
     });
 
     const rows = screen.getAllByTestId("project-row");
-    
-    // Click on the first project row (Warehouse Construction with ID 101)
-    fireEvent.click(rows[0]);
+    const actionBtn = screen.getByTestId(`action-btn-${mockProjects[0].projectID}`);
+    fireEvent.click(actionBtn);
 
-    expect(mockNavigate).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith("/single-view/101");
-  });
+    expect(screen.getByText("Choose an action")).toBeInTheDocument(); 
+    expect(screen.getByText("Edit Payments & Status")).toBeInTheDocument();
+});
+
+it("opens the project action modal when a row is clicked", async () => {
+  render(<ManagementPage />);
+  await waitFor(() => expect(screen.queryByText(/Loading projects.../i)).not.toBeInTheDocument());
+
+  const rows = screen.getAllByTestId("project-row");
+  fireEvent.click(rows[0]); // This triggers handleRowAction
+
+  // Ensure the modal (or its content) is rendered
+  expect(screen.getByText(/Choose an action/i)).toBeInTheDocument();
+});
 
   it("displays fallback user messages if fetched dataset is empty", async () => {
     // Override fetch mock for this test case specifically
@@ -198,5 +179,56 @@ import ManagementPage from "./management";
     });
 
     expect(screen.getByText(/No projects found./i)).toBeInTheDocument();
+  });
+
+    it("opens the project edit modal and allows editing payments", async () => {
+    render(<ManagementPage />);
+
+    // Wait for initial load
+    await waitFor(() => {
+      expect(screen.queryByText(/Loading projects.../i)).not.toBeInTheDocument();
+    });
+
+    const actionBtn = screen.getByTestId(`action-btn-${mockProjects[0].projectID}`);
+    fireEvent.click(actionBtn);
+
+    // Verify modal opened
+    expect(screen.getByText("Warehouse Construction")).toBeInTheDocument();
+    
+    // Navigate to edit-payments
+    fireEvent.click(screen.getByText(/Edit Payments & Status/i));
+    
+    // Check if input fields are present
+    const totalPaidInput = screen.getByLabelText(/Total Paid/i);
+    expect(totalPaidInput).toBeInTheDocument();
+
+    // Simulate changing values
+    fireEvent.change(totalPaidInput, { target: { value: '5000' } });
+    expect(totalPaidInput).toHaveValue(5000);
+  });
+
+ it("handles API error during project update", async () => {
+      // DO NOT reassign global.fetch. 
+      // Instead, tell the existing mock to behave differently for this specific call:
+      (global.fetch as jest.Mock).mockImplementationOnce((url) => {
+          if (url.includes("/api/projects/101")) {
+              return Promise.resolve({ ok: false, status: 500 });
+          }
+          // Default to returning success for other calls (like the initial load)
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(mockProjects) });
+      });
+
+      render(<ManagementPage />);
+      
+      // ... rest of your test remains the same
+      const rows = await screen.findAllByTestId("project-row");
+      fireEvent.click(rows[0]);
+      fireEvent.click(screen.getByText(/Edit Payments & Status/i));
+      
+      fireEvent.click(screen.getByText(/Save Changes/i));
+
+      await waitFor(() => {
+          expect(screen.getByText(/Failed to update project/i)).toBeInTheDocument();
+      });
   });
 });

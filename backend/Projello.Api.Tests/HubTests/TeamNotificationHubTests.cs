@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 using Moq;
 using System.Security.Claims;
 using Xunit;
+using Projello.Api.Hubs;
 
 namespace Projello.Api.Tests.Hubs
 {

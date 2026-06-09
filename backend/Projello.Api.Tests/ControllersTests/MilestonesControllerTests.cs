@@ -137,5 +137,68 @@ namespace Projello.Api.Tests
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
+
+[Fact]
+        public async Task UpdateMilestone_MilestoneDoesNotExist_ReturnsNotFound()
+        {
+            var context = GetInMemoryDbContext();
+            var controller = new MilestonesController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateMockUser("admin-id", "1") }
+            };
+
+            // FIX: Using MilestoneUpdateDto instead of Milestone
+            var dto = new MilestoneUpdateDto { Title = "Ghost Milestone" };
+            var result = await controller.UpdateMilestone(99999, dto);
+
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task UpdateMilestone_WorkerRole_ReturnsForbidden()
+        {
+            var context = GetInMemoryDbContext();
+            var workerId = "worker-005";
+            context.Milestones.Add(new Milestone { MilestoneID = 50, ProjectID = 1, Title = "Original Milestone" });
+            context.SaveChanges();
+
+            var controller = new MilestonesController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateMockUser(workerId, "3") } // Role "3" = Regular Worker
+            };
+
+            // FIX: Using MilestoneUpdateDto instead of Milestone
+            var dto = new MilestoneUpdateDto { Title = "Unauthorized Change" };
+            var result = await controller.UpdateMilestone(50, dto);
+
+            Assert.IsType<ObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task UpdateMilestone_ValidAdminOrForeman_ReturnsNoContentOrOk()
+        {
+            var context = GetInMemoryDbContext();
+            var adminId = "admin-global";
+            context.Milestones.Add(new Milestone { MilestoneID = 51, ProjectID = 1, Title = "Old Title", Status = "NotStarted" });
+            context.SaveChanges();
+
+            var controller = new MilestonesController(context);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateMockUser(adminId, "1") } // Role "1" = Admin
+            };
+
+            // FIX: Using MilestoneUpdateDto instead of Milestone
+            var dto = new MilestoneUpdateDto { Title = "Brand New Title" };
+            var result = await controller.UpdateMilestone(51, dto);
+
+            Assert.True(result is NoContentResult || result is OkObjectResult, "Expected NoContentResult or OkObjectResult from a successful milestone update.");
+
+            // Verify database state updated successfully
+            var updatedMilestone = context.Milestones.Find(51);
+            Assert.Equal("Brand New Title", updatedMilestone!.Title);
+        }
     }
 }
