@@ -156,7 +156,7 @@ namespace Projello.Api.Controllers
                 Description = dto.Description,
                 StartDate = dto.StartDate,
                 DueDate = dto.DueDate,
-                Status = "Planning",
+                Status = "Not Started",
                 CreatedByUserID = GetCurrentUserId()!,
                 CreatedAt = DateTime.UtcNow
             };
