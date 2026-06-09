@@ -50,11 +50,6 @@ export default function WorkerCard({
             </div>
           </div>
         </div>
-
-        <span className="worker-card__status">
-          <span className="worker-card__status-dot" aria-hidden="true" />
-          {status}
-        </span>
       </div>
 
       <div className="worker-card__body">

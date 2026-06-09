@@ -201,6 +201,7 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
                             checked={selectedUserIds.includes(userId)}
                             onChange={() => toggleMember(userId)}
                             onClick={(e) => e.stopPropagation()}
+                            aria-label={`Select ${name} to ring`}
                           />
                         </div>
                       );

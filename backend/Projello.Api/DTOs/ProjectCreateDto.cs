@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Projello.Api.DTOs
 {
+    [ExcludeFromCodeCoverage]
     public class ProjectCreateDto
     {
         [Required(ErrorMessage = "Project name is required")]

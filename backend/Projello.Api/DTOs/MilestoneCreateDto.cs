@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-
+using System.Diagnostics.CodeAnalysis;
 namespace Projello.Api.DTOs
 {
+    [ExcludeFromCodeCoverage]
     public class MilestoneCreateDto
     {
         [Required]

@@ -1,7 +1,10 @@
+namespace Projello.Api.DTOs;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
-namespace Projello.Api.DTOs
-{
+
+
+    [ExcludeFromCodeCoverage]
     public class ClientSummaryDto
     {
         //Null if not available
@@ -12,4 +15,3 @@ namespace Projello.Api.DTOs
         public int BlacklistClients { get; set; }
         
     }
-}

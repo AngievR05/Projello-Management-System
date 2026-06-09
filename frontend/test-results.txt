@@ -1,0 +1,155 @@
+
+> frontend@1.0.0 test
+> jest management.test.tsx Clients.tests.tsx Workers.tests.tsx
+
+  console.log
+    API_BASE_URL loaded: http://localhost:5049
+
+      at Object.<anonymous> (src/config.ts:21:11)
+
+  console.log
+    All Projects Fetched (normalized): [
+      {
+        projectID: 101,
+        name: 'Warehouse Construction',
+        description: 'Building foundation',
+        clientID: 5,
+        clientName: 'Build Corp',
+        status: 'Active',
+        startDate: null,
+        dueDate: null,
+        createdAt: '2026-05-01',
+        totalPaid: null,
+        outstanding: null
+      },
+      {
+        projectID: 102,
+        name: 'Office Refurbishment',
+        description: 'Painting rooms',
+        clientID: 9,
+        clientName: 'Apex Industries',
+        status: 'Completed',
+        startDate: null,
+        dueDate: null,
+        createdAt: '2026-05-15',
+        totalPaid: null,
+        outstanding: null
+      }
+    ]
+
+      at src/pages/management/management.tsx:281:15
+
+  console.log
+    All Projects Fetched (normalized): [
+      {
+        projectID: 101,
+        name: 'Warehouse Construction',
+        description: 'Building foundation',
+        clientID: 5,
+        clientName: 'Build Corp',
+        status: 'Active',
+        startDate: null,
+        dueDate: null,
+        createdAt: '2026-05-01',
+        totalPaid: null,
+        outstanding: null
+      },
+      {
+        projectID: 102,
+        name: 'Office Refurbishment',
+        description: 'Painting rooms',
+        clientID: 9,
+        clientName: 'Apex Industries',
+        status: 'Completed',
+        startDate: null,
+        dueDate: null,
+        createdAt: '2026-05-15',
+        totalPaid: null,
+        outstanding: null
+      }
+    ]
+
+      at src/pages/management/management.tsx:281:15
+
+  console.log
+    All Projects Fetched (normalized): [
+      {
+        projectID: 101,
+        name: 'Warehouse Construction',
+        description: 'Building foundation',
+        clientID: 5,
+        clientName: 'Build Corp',
+        status: 'Active',
+        startDate: null,
+        dueDate: null,
+        createdAt: '2026-05-01',
+        totalPaid: null,
+        outstanding: null
+      },
+      {
+        projectID: 102,
+        name: 'Office Refurbishment',
+        description: 'Painting rooms',
+        clientID: 9,
+        clientName: 'Apex Industries',
+        status: 'Completed',
+        startDate: null,
+        dueDate: null,
+        createdAt: '2026-05-15',
+        totalPaid: null,
+        outstanding: null
+      }
+    ]
+
+      at src/pages/management/management.tsx:281:15
+
+  console.log
+    All Projects Fetched (normalized): [
+      {
+        projectID: 101,
+        name: 'Warehouse Construction',
+        description: 'Building foundation',
+        clientID: 5,
+        clientName: 'Build Corp',
+        status: 'Active',
+        startDate: null,
+        dueDate: null,
+        createdAt: '2026-05-01',
+        totalPaid: null,
+        outstanding: null
+      },
+      {
+        projectID: 102,
+        name: 'Office Refurbishment',
+        description: 'Painting rooms',
+        clientID: 9,
+        clientName: 'Apex Industries',
+        status: 'Completed',
+        startDate: null,
+        dueDate: null,
+        createdAt: '2026-05-15',
+        totalPaid: null,
+        outstanding: null
+      }
+    ]
+
+      at src/pages/management/management.tsx:281:15
+
+  console.log
+    All Projects Fetched (normalized): []
+
+      at src/pages/management/management.tsx:281:15
+
+PASS src/pages/management/management.test.tsx
+  ManagementPage Component
+    ΓêÜ renders loading initially and fetches project data successfully (47 ms)
+    ΓêÜ correctly converts client names into compact uppercase initials (12 ms)
+    ΓêÜ navigates tabs reactively and displays corresponding sub-pages (18 ms)
+    ΓêÜ redirects users to single-view routing upon project row click interaction (14 ms)
+    ΓêÜ displays fallback user messages if fetched dataset is empty (11 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+Snapshots:   0 total
+Time:        3.514 s, estimated 4 s
+Ran all test suites matching management.test.tsx|Clients.tests.tsx|Workers.tests.tsx.

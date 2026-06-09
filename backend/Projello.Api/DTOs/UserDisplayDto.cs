@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Projello.Api.DTOs
 {
+    [ExcludeFromCodeCoverage]
     public class UserDisplayDto
     {
         public string Id { get; set; } = string.Empty;

@@ -1,5 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
 namespace Projello.Api.DTOs
 {
+    [ExcludeFromCodeCoverage]
     public class UserUpdateDto
     {
         public string FullName { get; set; } = string.Empty;

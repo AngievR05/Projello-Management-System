@@ -9,6 +9,8 @@ export type ManagementClientRow = {
   company: string;
   totalPaid: string;
   outstanding: string;
+  totalPaidAmount?: number;
+  outstandingAmount?: number;
   projects: string;
   activeProjects: string;
   status: string;
@@ -20,6 +22,7 @@ type ManagementClientTableProps = {
   onRowAction?: (row: ManagementClientRow) => void;
   onRowClick?: (row: ManagementClientRow) => void;
   onActionSelect?: (row: ManagementClientRow, actionKey: string) => void;
+  showEditFinancesAction?: boolean;
   className?: string;
   hideProjectsColumn?: boolean;
 };
@@ -29,6 +32,7 @@ export default function ManagementClientTable({
   onRowAction,
   onRowClick,
   onActionSelect,
+  showEditFinancesAction = false,
   className = "",
   hideProjectsColumn = false,
 }: ManagementClientTableProps) {

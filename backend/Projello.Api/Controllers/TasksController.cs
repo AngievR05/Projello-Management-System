@@ -83,7 +83,7 @@ namespace Projello.Api.Controllers
         [HttpGet("my-tasks")]
         public async Task<ActionResult<IEnumerable<TaskReadDto>>> GetMyTasks()
         {
-            var userId = GetCurrentUserId();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var tasks = await _context.Tasks
                 .Include(t => t.Milestone)
                 .Include(t => t.AssignedTo)
@@ -114,7 +114,10 @@ namespace Projello.Api.Controllers
         [HttpGet("project/{projectId}")]
         public async Task<ActionResult<IEnumerable<TaskReadDto>>> GetTasksByProject(int projectId)
         {
-            if (!await IsUserForemanOrAdmin(projectId)) return Forbid();
+            if (!await IsUserForemanOrAdmin(projectId))
+            {
+                return NotFound(); // Return 404 to avoid revealing project existence
+            };
 
             var tasks = await _context.Tasks
                 .Include(t => t.Milestone)
@@ -158,7 +161,8 @@ namespace Projello.Api.Controllers
             var task = await _context.Tasks.Include(t => t.Milestone).FirstOrDefaultAsync(t => t.TaskID == id);
             if (task == null) return NotFound();
 
-            bool isAssigned = task.AssignedToUserID == GetCurrentUserId();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            bool isAssigned = task.AssignedToUserID == userId;
             if (!isAssigned && !await IsUserForemanOrAdmin(task.Milestone.ProjectID)) return Forbid();
 
             if (Enum.TryParse<Status>(dto.Status, true, out var newStatus))
