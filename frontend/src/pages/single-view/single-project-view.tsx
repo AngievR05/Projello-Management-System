@@ -156,6 +156,62 @@ export default function SingleProjectViewPage() {
 
   const STATUS_OPTIONS = ["Not Started", "Planning", "In Progress", "Completed"];
 
+  const [isEditingDescription, setIsEditingDescription] = useState<boolean>(false);
+  const [descriptionValue, setDescriptionValue] = useState<string>("");
+  const [descriptionSaving, setDescriptionSaving] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (project) {
+      setDescriptionValue(project.description || "");
+    }
+  }, [project]);
+
+  const startEditingDescription = () => {
+    setDescriptionValue(project?.description || "");
+    setIsEditingDescription(true);
+  };
+
+  const cancelDescriptionEdit = () => {
+    setIsEditingDescription(false);
+  };
+
+  const saveDescription = async () => {
+    if (!project) return;
+    const trimmedDesc = descriptionValue.trim();
+    setDescriptionSaving(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/api/projects/${project.projectID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          name: project.name,
+          description: trimmedDesc,
+          clientID: project.clientID,
+          startDate: project.startDate,
+          dueDate: project.dueDate,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to update description.");
+      }
+
+      setProject((prev) => (prev ? { ...prev, description: trimmedDesc } : prev));
+      antdMessage.success("Description updated successfully.");
+      setIsEditingDescription(false);
+    } catch (err: any) {
+      antdMessage.error(err.message || "Failed to update description.");
+    } finally {
+      setDescriptionSaving(false);
+    }
+  };
+
   const openRenameModal = () => {
     setRenameValue(project?.name || "");
     setShowRenameModal(true);
@@ -211,6 +267,7 @@ export default function SingleProjectViewPage() {
 
   const handleConfirmStatusChange = async () => {
     if (!project || !selectedStatus) return;
+    const trimmedDesc = project.description || "";
 
     setStatusUpdating(true);
 

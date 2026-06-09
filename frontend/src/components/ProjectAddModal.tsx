@@ -74,17 +74,7 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
     <CustomModal
       open={open}
       onCancel={handleCancel}
-      title={
-        <div className="entity-modal__title-row">
-          {/* <div className="entity-modal__title-icon" aria-hidden="true">
-            <PlusCircle size={18} strokeWidth={2.2} />
-          </div> */}
-          <div>
-            <div className="entity-modal__title">Add New Project</div>
-            <div className="entity-modal__subtitle">Create a new project record</div>
-          </div>
-        </div>
-      }
+      title="Add New Project"
       footer={
         <div className="entity-modal__footer">
           <Button onClick={handleCancel}>

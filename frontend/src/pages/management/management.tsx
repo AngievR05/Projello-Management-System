@@ -8,7 +8,7 @@ import ClientsPage from "./Clients";
 import WorkersPage from "./Workers";
 import { API_BASE_URL } from "../../config";
 
-interface Project {
+export interface Project {
   projectID: number;
   name: string;
   description: string;
@@ -17,7 +17,10 @@ interface Project {
   status: string;
   startDate: string | null;
   dueDate: string | null;
-  CreatedAt: string;
+  createdAt: string;       
+  CreatedAt?: string;      
+  totalPaid?: number | string | null;    
+  outstanding?: number | string | null;  
 }
 
 type ManagementView = "projects" | "clients" | "workers";
