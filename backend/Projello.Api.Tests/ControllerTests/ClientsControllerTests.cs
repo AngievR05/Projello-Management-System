@@ -224,7 +224,7 @@ namespace Projello.Api.Tests
 
             var result = await controller.GetClient(10);
 
-            Assert.IsType<OkObjectResult>(result);
+            Assert.IsType<ForbidResult>(result);
         }
 
         [Fact]

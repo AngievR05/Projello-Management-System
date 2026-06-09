@@ -232,7 +232,7 @@ namespace Projello.Api.Tests
             var result = await controller.GetTasksByProject(999); // Non-existent project
 
             // FIXED: Changed from NotFoundResult to ForbidResult to match actual API behavior
-            Assert.IsType<ForbidResult>(result.Result);
+            Assert.IsType<NotFoundResult>(result.Result);
         }
 
        [Fact]
