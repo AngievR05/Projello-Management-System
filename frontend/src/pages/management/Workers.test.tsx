@@ -3,6 +3,8 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import WorkersPage from "./Workers";
 
+
+
 // Mock child components to cleanly isolate our page behavior
 jest.mock("../../components/StatCard", () => ({
   __esModule: true,
@@ -111,9 +113,11 @@ describe("WorkersPage Component", () => {
 
     const statCards = screen.getAllByTestId("stat-card");
     
+    const onlineCard = statCards.find(c => c.getAttribute("data-label") === "Online Workers");
     const foremenCard = statCards.find(c => c.getAttribute("data-label") === "Foremen");
     const workersCard = statCards.find(c => c.getAttribute("data-label") === "Workers");
 
+    expect(onlineCard).toHaveTextContent("2");   
     expect(foremenCard).toHaveTextContent("1");  
     expect(workersCard).toHaveTextContent("1");  
   });
